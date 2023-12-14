@@ -1,0 +1,278 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  WORKER
+  CUSTOMER
+  ENGINEER
+  PROJECT_MANAGER
+  SALE
+}
+
+enum ProjectStatus {
+  NEW
+  SITE_SURVEY
+  CUSTOMER_INQUIRY
+  DESIGN_IN_PROGRESS
+  CUSTOMER_READY
+  INSTALLATION_IN_PROGRESS
+  ONLINE
+  EQUIPMENT_SELECTION
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  RESOURCE_BLOCKED
+  COMPLETE
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ComponentType {
+  PANEL
+  BATTERY
+  TURBINE
+  INVERTOR
+}
+
+enum ConnectionType {
+  SERIES
+  PARALLEL
+  SERIES_PARALLEL
+}
+
+enum ComponentNature {
+  MONOCRYSTALLINE
+  POLYCRYSTALLINE
+  THIN_FILM
+  BIFACIAL
+  ACID
+  DRY_CELL
+}
+
+model User {
+  id       String  @id @unique @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  role     Role    @default(ENGINEER)
+  location String?
+
+  refresh_token String?
+  is_active     Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  user_team     UserToTeam[]
+  electric_load ElectricLoad[]
+  customer      Project[]      @relation("customer")
+  quote         Quote[]
+
+  @@map("users")
+}
+
+model Team {
+  id    String @id @unique @default(uuid())
+  name  String
+  point Int?   @default(0)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  users   UserToTeam[]
+  project ProjectToTeam[]
+
+  @@map("teams")
+}
+
+model UserToTeam {
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String
+  team    Team   @relation(fields: [team_id], references: [id])
+  team_id String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@id([user_id, team_id])
+  @@map("user_team_pivot")
+}
+
+model ElectricLoad {
+  id            String @id @unique @default(uuid())
+  name          String
+  watt          Float
+  hour          Float
+  watt_per_hour Float
+  user_id       String
+  user          User   @relation(fields: [user_id], references: [id])
+
+  @@map("customer_electric_load")
+}
+
+model Project {
+  id          String  @id @unique @default(uuid())
+  name        String
+  description String?
+  latitude    String?
+  longitude   String
+  location    String?
+
+  actual_area Float?
+
+  sun_hour_summer  Float?
+  sun_hour_winter  Float?
+  sun_hour_monsoon Float?
+  sun_hour_average Float?
+  sun_direction    String?
+
+  total_sun_power_need Float?
+  correction_factor    Float?
+
+  power_out_watt    Float?
+  power_out_voltage Float?
+  reserve_power_for Int?
+
+  cleaning Boolean @default(false)
+
+  status ProjectStatus @default(NEW)
+
+  start_date DateTime?
+  end_date   DateTime?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  customer_id String
+  parent_id   String?
+
+  parent   Project?  @relation("parent_child", fields: [parent_id], references: [id])
+  children Project[] @relation("parent_child")
+  customer User?     @relation("customer", fields: [customer_id], references: [id])
+
+  team              ProjectToTeam[]
+  component ProjectComponent[]
+  equipment         Equipment[]
+  quote             Quote[]
+
+  @@map("project")
+}
+
+model ProjectToTeam {
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_id String
+  team       Team    @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  team_id    String
+
+  @@id([project_id, team_id])
+  @@map("project_team_pivot")
+}
+
+model ProjectComponent {
+  id              String          @id @unique @default(uuid())
+  component_type  ComponentType
+  connection_type ConnectionType
+  nature          ComponentNature
+
+  name                    String?
+  voltage                 Float?
+  amperage                Float?
+  loose_connection_factor Float?
+  efficiency              Float?
+  aging                   Float?
+  dod                     Float?
+  operation_temperature   Float?
+  each_item_rating_volts  Float?
+  each_item_rating_ampre  Float?
+
+  project    Project? @relation(fields: [project_id], references: [id])
+  project_id String?
+
+  @@map("project_component")
+}
+
+model Inventory {
+  id            String  @id @unique @default(uuid())
+  name          String
+  brand         String
+  kind          String
+  type          String?
+  product_image String?
+  description   String?
+  size          String?
+
+  capacity Float?
+  watt     Float?
+  voltage  Float?
+  ampere   Float?
+  cost     Float
+
+  attribute Json?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  equipment Equipment[]
+
+  @@map("inventory")
+}
+
+model Equipment {
+  id          String  @id @unique @default(uuid())
+  quantity    Int
+  information String?
+
+  inventory_id String
+  inventory    Inventory @relation(fields: [inventory_id], references: [id])
+
+  project_id String
+  project    Project @relation(fields: [project_id], references: [id])
+
+  @@map("equipment")
+}
+
+model Quote {
+  id                String      @id @unique @default(uuid())
+  sn                Int         @unique()
+  inventory_cost    Float       @default(0)
+  net_total         Float       @default(0)
+  installation_cost Float       @default(0)
+  discount          Float?      @default(0)
+  adjustment        Float?      @default(0)
+  vat               Float?      @default(0)
+  verification_file String?
+  status            QuoteStatus @default(DRAFT)
+
+  project_id  String
+  project     Project @relation(fields: [project_id], references: [id])
+  customer_id String
+  customer    User    @relation(fields: [customer_id], references: [id])
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("quote")
+}
