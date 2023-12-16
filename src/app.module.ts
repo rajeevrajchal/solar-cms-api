@@ -4,9 +4,18 @@ import { ApolloDriver } from '@nestjs/apollo';
 import ContextType from './types/context.type';
 import { join } from 'path';
 import { corsOptions } from './constants/cors.constant';
+import { AuthModule } from './modules/auth/auth.module';
+import { PrismaService } from './modules/prisma/prisma.service';
+import { UserModule } from './modules/user/user.module';
+import { ProjectModule } from './modules/project/project.module';
+import { MailModule } from './modules/mail/mail.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // no need to import into other modules
+    }),
     GraphQLModule.forRoot({
       driver: ApolloDriver,
       context: ({ req, res }): ContextType => ({
@@ -21,9 +30,13 @@ import { corsOptions } from './constants/cors.constant';
       cors: corsOptions,
       debug: true,
     }),
+    AuthModule,
+    UserModule,
+    ProjectModule,
+    MailModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [PrismaService],
 })
 export class AppModule {
   logger: ['error', 'warn'];
