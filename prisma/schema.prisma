@@ -75,14 +75,18 @@ model User {
   role     Role    @default(ENGINEER)
   location String?
 
+  otp           Float?
   refresh_token String?
+  reset_token   String?
   is_active     Boolean @default(false)
+  is_temp       Boolean @default(false)
 
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
+  otp_expiry DateTime?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
 
-  user_team     UserToTeam[]
+  team          UserToTeam[]
   electric_load ElectricLoad[]
   customer      Project[]      @relation("customer")
   quote         Quote[]
@@ -151,7 +155,7 @@ model Project {
 
   power_out_watt    Float?
   power_out_voltage Float?
-  reserve_power_for Int?
+  reserve_power_for Float?
 
   cleaning Boolean @default(false)
 
@@ -171,10 +175,11 @@ model Project {
   children Project[] @relation("parent_child")
   customer User?     @relation("customer", fields: [customer_id], references: [id])
 
-  team              ProjectToTeam[]
+  team      ProjectToTeam[]
   component ProjectComponent[]
-  equipment         Equipment[]
-  quote             Quote[]
+  equipment Equipment[]
+  quote     Quote              @relation(fields: [quoteId], references: [id])
+  quoteId   String
 
   @@map("project")
 }
@@ -266,9 +271,9 @@ model Quote {
   status            QuoteStatus @default(DRAFT)
 
   project_id  String
-  project     Project @relation(fields: [project_id], references: [id])
   customer_id String
-  customer    User    @relation(fields: [customer_id], references: [id])
+  customer    User      @relation(fields: [customer_id], references: [id])
+  project     Project[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
