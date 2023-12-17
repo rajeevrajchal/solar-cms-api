@@ -1,11 +1,21 @@
 const messages = {
   email_password_invalid: 'Invalid email or password',
   user_exist: 'User already exist',
+  user_not_active: 'User is not active',
+  change_your_password_first: 'Change your password on first login',
+  login_error: 'Login Error',
+
+  password_changed: 'Password changed successfully',
+
   token_invalid: 'Token invalid',
   token_required: 'Token required',
   unauthorized: 'Unauthorized',
   logout: 'logout successfully',
   invalid_token: 'Refresh token is invalid',
+
+  user_created: 'User created',
+  user_updated: 'User updated',
+
   // projects
   project_create_success: 'Project Created Successfully',
   project_updated: 'Project Updated Successfully',
