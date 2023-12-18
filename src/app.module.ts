@@ -7,6 +7,8 @@ import { MailModule } from './module/mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './exception/exception';
+import { CustomerModule } from './module/customer/customer.module';
+import { ProjectModule } from './module/project/project.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { AllExceptionsFilter } from './exception/exception';
     UserModule,
     AuthModule,
     MailModule,
+    CustomerModule,
+    ProjectModule,
   ],
   controllers: [],
   providers: [
