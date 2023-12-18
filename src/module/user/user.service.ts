@@ -7,6 +7,8 @@ import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { PasswordGeneratorService } from 'src/helpers/password-generator.service';
 import { User } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
+import { UserUpdateInput } from './dto/args/user_update_input.dto';
+import { UserInput } from './dto/args/user_input.dto';
 
 @Injectable()
 export class UserService {
@@ -18,7 +20,7 @@ export class UserService {
     private readonly mail: MailService,
   ) {}
 
-  async createUser(user_input: any) {
+  async createUser(user_input: UserInput) {
     try {
       const loginUser: User = await this.userChecker.checkUserExist(
         user_input?.email,
@@ -42,10 +44,11 @@ export class UserService {
           is_temp: true,
         },
       });
-      await this.mail.sendInvitation({
+      const params: any = {
         ...user_input,
         password: randomPassword,
-      });
+      };
+      await this.mail.sendInvitation(params);
       return {
         message: messages.user_created,
         user: user,
@@ -55,20 +58,21 @@ export class UserService {
     }
   }
 
-  async updateUser(user_input: any) {
+  async updateUser(user_input: UserUpdateInput, user_id: string) {
     try {
+      const params: any = {
+        ...omit(user_input, ['id']),
+      };
       const user = await this.prisma.user.update({
-        where: { id: user_input.id },
-        data: {
-          ...omit(user_input, ['id']),
-        },
+        where: { id: user_id },
+        data: params,
       });
       return {
         message: messages.user_updated,
         user: user,
       };
     } catch (error) {
-      throw new error();
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
 }

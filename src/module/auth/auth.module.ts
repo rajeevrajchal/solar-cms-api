@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtStrategy } from 'src/middleware/strategy/jwt.strategy';
 import { PasswordHashService } from 'src/helpers/password-hash.service';
 import { LocalResetStrategy } from 'src/middleware/strategy/local-reset.gurad';
+import { JwtRefreshStrategy } from 'src/middleware/strategy/jwt-auth-refresh.strategy';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { LocalResetStrategy } from 'src/middleware/strategy/local-reset.gurad';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshStrategy,
     LocalResetStrategy,
     PasswordHashService,
   ],
