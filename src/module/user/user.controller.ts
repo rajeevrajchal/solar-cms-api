@@ -5,6 +5,8 @@ import {
   HttpStatus,
   UseGuards,
   Body,
+  Patch,
+  Param,
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
@@ -28,9 +30,14 @@ export class UserController {
   }
 
   @HttpCode(HttpStatus.CREATED)
-  @Post('')
-  updateUser(@Body() user_input: UserUpdateInput): Promise<UserResponse> {
-    console.log('the body', user_input);
-    return this.userService.updateUser(user_input);
+  @Patch(':user_id')
+  updateUser(
+    @Body() user_input: UserUpdateInput,
+    @Param()
+    params: {
+      user_id: string;
+    },
+  ): Promise<UserResponse> {
+    return this.userService.updateUser(user_input, params.user_id);
   }
 }

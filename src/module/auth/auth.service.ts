@@ -1,5 +1,7 @@
+import { UserCheckerService } from './../../helpers/user-checker.service';
 import { PasswordHashService } from 'src/helpers/password-hash.service';
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -8,6 +10,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import messages from 'src/constants/message.constant';
 import { PrismaService } from '../prisma/prisma.service';
+import { User } from '@prisma/client';
+import { LogoutDto } from './dto/response/logout.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +19,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordHashService: PasswordHashService,
     private readonly prisma: PrismaService,
+    private readonly userChecker: UserCheckerService,
+    private readonly hashPassword: PasswordHashService,
   ) {}
 
   async login(req: any): Promise<any> {
@@ -99,7 +105,59 @@ export class AuthService {
     }
   }
 
-  async sayHello(): Promise<any> {
-    return 'hello';
+  async refreshToken(user: User, refreshToken: string): Promise<any> {
+    try {
+      const dbUser: User = await this.userChecker.checkUserExist(user.email);
+      if (!dbUser || !refreshToken) {
+        throw new UnauthorizedException(messages.token_required);
+      }
+
+      const decoded = this.jwtService.decode(refreshToken);
+
+      if (!decoded) {
+        throw new ForbiddenException(messages.invalid_token);
+      }
+
+      const refreshTokenMatched = await this.hashPassword.hashCompare(
+        refreshToken,
+        dbUser.refresh_token,
+      );
+
+      if (!refreshTokenMatched) {
+        throw new ForbiddenException(messages['access_denied']);
+      }
+
+      const tokenPayload = {
+        email: dbUser?.email,
+        username: dbUser?.email,
+        sub: dbUser?.id,
+      };
+
+      const access_token = this.jwtService.sign(tokenPayload);
+
+      return {
+        access_token,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
+  }
+
+  async logout(user_id: string): Promise<LogoutDto> {
+    try {
+      await this.prisma.user.update({
+        where: {
+          id: user_id,
+        },
+        data: {
+          refresh_token: null,
+        },
+      });
+      return {
+        message: messages['logout'],
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
   }
 }
