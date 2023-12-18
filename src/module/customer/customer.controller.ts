@@ -1,4 +1,29 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CustomerService } from './customer.service';
+import { CustomerResponse } from './dto/res/customer-response';
+import { CustomerInput } from './dto/arg/customer_input.dto';
+import { HasRoles } from 'src/decorators/role.decorator';
+import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
+import { Role } from '@prisma/client';
 
 @Controller('customer')
-export class CustomerController {}
+export class CustomerController {
+  constructor(private readonly customerService: CustomerService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAndRolesGuard)
+  @HasRoles(Role.SALE)
+  async createCustomer(
+    @Body() customer_input: CustomerInput,
+  ): Promise<CustomerResponse> {
+    return this.customerService.createCustomer(customer_input);
+  }
+}

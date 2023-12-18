@@ -16,6 +16,9 @@ const messages = {
   user_created: 'User created',
   user_updated: 'User updated',
 
+  // customer
+  electric_load_added: 'Electric load saved',
+
   // projects
   project_create_success: 'Project Created Successfully',
   project_updated: 'Project Updated Successfully',

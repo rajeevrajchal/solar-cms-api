@@ -74,6 +74,7 @@ model User {
   password String
   role     Role    @default(ENGINEER)
   location String?
+  phone    String?
 
   otp           Float?
   refresh_token String?
@@ -86,10 +87,9 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 
-  team          UserToTeam[]
-  electric_load ElectricLoad[]
-  customer      Project[]      @relation("customer")
-  quote         Quote[]
+  team    UserToTeam[]
+  project Project[]    @relation("customer")
+  quote   Quote[]
 
   @@map("users")
 }
@@ -123,13 +123,14 @@ model UserToTeam {
 }
 
 model ElectricLoad {
-  id            String @id @unique @default(uuid())
+  id            String  @id @unique @default(uuid())
   name          String
   watt          Float
+  quantity      Int
   hour          Float
   watt_per_hour Float
-  user_id       String
-  user          User   @relation(fields: [user_id], references: [id])
+  project_id    String
+  project       Project @relation(fields: [project_id], references: [id])
 
   @@map("customer_electric_load")
 }
@@ -175,11 +176,12 @@ model Project {
   children Project[] @relation("parent_child")
   customer User?     @relation("customer", fields: [customer_id], references: [id])
 
-  team      ProjectToTeam[]
-  component ProjectComponent[]
-  equipment Equipment[]
-  quote     Quote              @relation(fields: [quoteId], references: [id])
-  quoteId   String
+  team          ProjectToTeam[]
+  component     ProjectComponent[]
+  equipment     Equipment[]
+  quote         Quote              @relation(fields: [quoteId], references: [id])
+  quoteId       String
+  electric_load ElectricLoad[]
 
   @@map("project")
 }
