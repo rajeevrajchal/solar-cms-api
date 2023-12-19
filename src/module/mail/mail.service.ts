@@ -6,7 +6,7 @@ import { User } from '@prisma/client';
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendInvitation(user: User) {
+  async sendInvitation(user: Partial<User>) {
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Welcome to Eco Spark',

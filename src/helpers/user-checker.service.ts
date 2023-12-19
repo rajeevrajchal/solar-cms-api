@@ -15,4 +15,12 @@ export class UserCheckerService {
     });
     return user;
   }
+
+  async checkUserExistById(id: string): Promise<User> {
+    return this.prisma.user.findFirstOrThrow({
+      where: {
+        id: id,
+      },
+    });
+  }
 }

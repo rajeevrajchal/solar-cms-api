@@ -4,9 +4,16 @@ import { ProjectService } from './project.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RolesGuard } from 'src/middleware/guard/role.guard';
 import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
+import { UserCheckerService } from 'src/helpers/user-checker.service';
 
 @Module({
   controllers: [ProjectController],
-  providers: [ProjectService, PrismaService, RolesGuard, JwtAuthGuard],
+  providers: [
+    ProjectService,
+    PrismaService,
+    RolesGuard,
+    JwtAuthGuard,
+    UserCheckerService,
+  ],
 })
 export class ProjectModule {}
