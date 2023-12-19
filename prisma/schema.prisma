@@ -87,9 +87,11 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 
-  team    UserToTeam[]
-  project Project[]    @relation("customer")
-  quote   Quote[]
+  team     UserToTeam[]
+  project  Project[]    @relation("customer_project")
+  creator  Project[]    @relation("creator_project")
+  engineer Project[]    @relation("engineer_project")
+  quote    Quote[]
 
   @@map("users")
 }
@@ -139,8 +141,8 @@ model Project {
   id          String  @id @unique @default(uuid())
   name        String
   description String?
-  latitude    String?
-  longitude   String
+  latitude    Float?
+  longitude   Float?
   location    String?
 
   actual_area Float?
@@ -170,18 +172,21 @@ model Project {
   updatedAt DateTime  @default(now()) @updatedAt
 
   customer_id String
+  customer    User?   @relation("customer_project", fields: [customer_id], references: [id])
+  creator     User?   @relation("creator_project", fields: [creator_id], references: [id])
+  creator_id  String
+  engineer    User?   @relation("engineer_project", fields: [engineer_id], references: [id])
+  engineer_id String?
   parent_id   String?
 
   parent   Project?  @relation("parent_child", fields: [parent_id], references: [id])
   children Project[] @relation("parent_child")
-  customer User?     @relation("customer", fields: [customer_id], references: [id])
 
   team          ProjectToTeam[]
   component     ProjectComponent[]
   equipment     Equipment[]
-  quote         Quote              @relation(fields: [quoteId], references: [id])
-  quoteId       String
   electric_load ElectricLoad[]
+  quote         Quote[]
 
   @@map("project")
 }
@@ -274,8 +279,8 @@ model Quote {
 
   project_id  String
   customer_id String
-  customer    User      @relation(fields: [customer_id], references: [id])
-  project     Project[]
+  customer    User    @relation(fields: [customer_id], references: [id])
+  project     Project @relation(fields: [project_id], references: [id])
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

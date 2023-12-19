@@ -1,5 +1,10 @@
 import { PasswordHashService } from 'src/helpers/password-hash.service';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { omit } from 'lodash';
 import messages from 'src/constants/message.constant';
@@ -9,8 +14,10 @@ import { User } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { UserUpdateInput } from './dto/args/user_update_input.dto';
 import { UserInput } from './dto/args/user_input.dto';
+import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
 
 @Injectable()
+@UseGuards(JwtAuthGuard)
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
@@ -44,11 +51,12 @@ export class UserService {
           is_temp: true,
         },
       });
-      const params: any = {
-        ...user_input,
+      await this.mail.sendInvitation({
+        name: user_input.name,
+        email: user_input.email,
+        role: user_input.role,
         password: randomPassword,
-      };
-      await this.mail.sendInvitation(params);
+      });
       return {
         message: messages.user_created,
         user: user,
