@@ -35,7 +35,7 @@ export class ProjectController {
   @UseGuards(JwtAndRolesGuard)
   @HasRoles(Role.SALE)
   async storeProject(
-    @Body() project_input: CreateProjectInput,
+    @Body() project_input: Partial<CreateProjectInput>,
     @CurrentUser() user: any,
   ): Promise<ProjectResponse> {
     return this.projectService.storeProject(project_input, user);

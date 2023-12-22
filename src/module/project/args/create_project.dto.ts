@@ -67,7 +67,19 @@ export class CreateProjectInput {
   @IsBoolean()
   customer_id: string;
 
+  @IsNotEmpty()
+  @IsBoolean()
+  panel_info: string;
+
+  @IsNotEmpty()
+  @IsBoolean()
+  battery_type: string;
+
+  @IsEmpty()
+  @IsString()
+  parent_id: string;
+
   @IsEmpty()
   @IsBoolean()
-  parent_id: string;
+  mark_location_customer: boolean;
 }

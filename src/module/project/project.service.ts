@@ -1,3 +1,4 @@
+import { SlugService } from './../../helpers/slug-generator.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElectricLoad } from './args/electric_load.dto';
@@ -13,6 +14,7 @@ export class ProjectService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userChecker: UserCheckerService,
+    private readonly slugService: SlugService,
   ) {}
 
   async findProject(project_id): Promise<Project> {
@@ -38,16 +40,26 @@ export class ProjectService {
   }
 
   async storeProject(
-    project: CreateProjectInput,
+    project: Partial<CreateProjectInput>,
     user: User,
   ): Promise<ProjectResponse> {
     try {
       const customer = await this.userChecker.checkUserExistById(
         project.customer_id,
       );
+
       if (customer) {
+        const sun_hours = [
+          project.sun_hour_monsoon,
+          project.sun_hour_summer,
+          project.sun_hour_winter,
+        ];
+        const project_name = this.slugService.generateSlugWithCustomName(
+          customer.name,
+        );
         const params: any = {
           ...omit(project, ['customer_id']),
+          name: project_name,
           customer: {
             connect: { id: project.customer_id },
           },
@@ -56,6 +68,11 @@ export class ProjectService {
               id: user?.id,
             },
           },
+          sun_hour_average: sun_hours.some((item) => item === null)
+            ? 0
+            : sun_hours.reduce((acc, val) => {
+                return val !== null ? acc * val : acc;
+              }, 1) / sun_hours.length,
           status: ProjectStatus.NEW,
         };
         const info = await this.prisma.project.create({

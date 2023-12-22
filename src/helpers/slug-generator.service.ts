@@ -5,7 +5,10 @@ import { Global, Injectable } from '@nestjs/common';
 export class SlugService {
   generateSlugWithCustomName(name: string): string {
     const currentDate = new Date().getUTCDate();
-    const slug = `${name}-${currentDate}`;
+    const currentMonth = new Date().getUTCMonth();
+    const currentYear = new Date().getUTCFullYear();
+    const currentMili = new Date().getUTCMilliseconds();
+    const slug = `${name}-${currentDate}-${currentMonth}-${currentYear}-${currentMili}`;
 
     return slug;
   }
