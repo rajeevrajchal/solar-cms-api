@@ -1,12 +1,25 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import messages from 'src/constants/message.constant';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { CustomerResponse } from './dto/res/customer-response';
 
 @Injectable()
 export class CustomerService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getAllCustomer(): Promise<User[]> {
+    try {
+      const customer = await this.prisma.user.findMany({
+        where: {
+          role: Role.CUSTOMER,
+        },
+      });
+      return customer;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   async createCustomer(customer_input: any): Promise<CustomerResponse> {
     try {

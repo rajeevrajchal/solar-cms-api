@@ -138,12 +138,13 @@ model ElectricLoad {
 }
 
 model Project {
-  id          String  @id @unique @default(uuid())
-  name        String
-  description String?
-  latitude    Float?
-  longitude   Float?
-  location    String?
+  id                     String   @id @unique @default(uuid())
+  name                   String
+  description            String?
+  latitude               Float?
+  longitude              Float?
+  location               String?
+  mark_location_customer Boolean? @default(false)
 
   actual_area Float?
 
@@ -160,7 +161,9 @@ model Project {
   power_out_voltage Float?
   reserve_power_for Float?
 
-  cleaning Boolean @default(false)
+  panel_info   String?
+  battery_type String?
+  cleaning     Boolean @default(false)
 
   status ProjectStatus @default(NEW)
 
