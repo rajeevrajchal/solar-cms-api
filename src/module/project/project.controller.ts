@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -60,5 +61,15 @@ export class ProjectController {
     @Param('user_id') user_id: string,
   ): Promise<ProjectResponse> {
     return this.projectService.assignUserInProject(project_id, user_id);
+  }
+
+  @Delete(':project_id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAndRolesGuard)
+  @HasRoles(Role.SALE)
+  async deleteCustomer(
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.deleteProject(project_id);
   }
 }

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -19,11 +21,21 @@ export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
   @Get()
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAndRolesGuard)
   @HasRoles(Role.SALE)
   async getAllCustomer(): Promise<User[]> {
     return this.customerService.getAllCustomer();
+  }
+
+  @Get(':customer_id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAndRolesGuard)
+  @HasRoles(Role.SALE)
+  async getSingleCustomer(
+    @Param('customer_id') customer_id: string,
+  ): Promise<User> {
+    return this.customerService.getSingleCustomer(customer_id);
   }
 
   @Post()
@@ -34,5 +46,15 @@ export class CustomerController {
     @Body() customer_input: CustomerInput,
   ): Promise<CustomerResponse> {
     return this.customerService.createCustomer(customer_input);
+  }
+
+  @Delete(':customer_id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAndRolesGuard)
+  @HasRoles(Role.SALE)
+  async deleteCustomer(
+    @Param('customer_id') customer_id: string,
+  ): Promise<CustomerResponse> {
+    return this.customerService.deleteCustomer(customer_id);
   }
 }

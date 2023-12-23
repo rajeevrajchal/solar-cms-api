@@ -1,10 +1,14 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Project, User } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MailService {
-  constructor(private mailerService: MailerService) {}
+  constructor(
+    private mailerService: MailerService,
+    private configService: ConfigService,
+  ) {}
 
   async sendInvitation(user: Partial<User>) {
     await this.mailerService.sendMail({
@@ -16,7 +20,26 @@ export class MailService {
         email: user.email,
         password: user.password,
         role: user.role,
-        link: 'localhost:3000',
+        link: this.configService.get<string>('FRONTEND_URL'),
+      },
+    });
+  }
+
+  async sendProjectInfoToCustomer(
+    user: Partial<User>,
+    project: Partial<Project>,
+  ) {
+    const projectElectricLoadUrl =
+      this.configService.get<string>('PROJECT_LOAD_URL');
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Welcome to Eco Spark',
+      template: './project_info_customer',
+      context: {
+        company_name: this.configService.get<string>('COMPANY_NAME'),
+        user: user,
+        project: project,
+        project_electric_load_url: projectElectricLoadUrl,
       },
     });
   }

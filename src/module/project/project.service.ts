@@ -8,6 +8,7 @@ import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectResponse } from './res/project-response';
 import { omit } from 'lodash';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ProjectService {
@@ -15,10 +16,10 @@ export class ProjectService {
     private readonly prisma: PrismaService,
     private readonly userChecker: UserCheckerService,
     private readonly slugService: SlugService,
+    private readonly mailService: MailService,
   ) {}
 
   async findProject(project_id): Promise<Project> {
-    console.log('prrojec_id', project_id);
     return this.prisma.project.findFirstOrThrow({
       where: {
         id: project_id,
@@ -31,6 +32,17 @@ export class ProjectService {
       const project = this.prisma.project.findMany({
         where: {
           creator_id: user.id,
+          deletedAt: null,
+        },
+        include: {
+          customer: {
+            select: {
+              name: true,
+              email: true,
+              phone: true,
+              id: true,
+            },
+          },
         },
       });
       return project;
@@ -78,6 +90,7 @@ export class ProjectService {
         const info = await this.prisma.project.create({
           data: params,
         });
+        await this.mailService.sendProjectInfoToCustomer(customer, info);
         return {
           message: messages.project_create_success,
           project: info,
@@ -133,6 +146,32 @@ export class ProjectService {
           message: messages.project_assigned_engineer,
         };
       }
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async deleteProject(project_id: string): Promise<ProjectResponse> {
+    try {
+      await this.prisma.$transaction([
+        this.prisma.project.updateMany({
+          where: {
+            OR: [
+              { id: project_id },
+              { parent_id: project_id }, // Assuming parent_id is a field in the Project model
+            ],
+          },
+          data: { deletedAt: new Date() },
+        }),
+        this.prisma.quote.updateMany({
+          where: { project_id: project_id },
+          data: { deletedAt: new Date() },
+        }),
+      ]);
+      return {
+        message: messages.customer_deleted,
+        project: null,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }

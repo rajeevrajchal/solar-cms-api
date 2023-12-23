@@ -1,0 +1,37 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Project Information - [Your Company Name]</title>
+  </head>
+  <body>
+    <p>Hello {{user.name}},</p>
+
+    <p>We hope this message finds you well. Thank you for choosing [Your Company
+      Name] for your project needs.</p>
+
+    <p>We wanted to provide you with the details of your project. Below is the
+      information we've gathered:</p>
+
+    <ul>
+      <li><strong>Project Name:</strong> {{project.name}}</li>
+      <li><strong>Project ID:</strong> {{project.id}}</li>
+    </ul>
+
+    <p>To ensure a smooth process and effective management of your project, we
+      kindly request you to fill out the project load details using the
+      following link:</p>
+
+    <p><a href='{{project_electric_load_url}}' target='_blank'>Fill electric
+        application</a></p>
+
+    <p>If you have any questions or need further assistance, feel free to reach
+      out to our team. We're here to help!</p>
+
+    <p>Thank you for your cooperation.</p>
+
+    <p>Best regards,
+      <br />
+      {{company_name}}
+    </p>
+  </body>
+</html>
