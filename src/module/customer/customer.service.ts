@@ -13,6 +13,28 @@ export class CustomerService {
       const customer = await this.prisma.user.findMany({
         where: {
           role: Role.CUSTOMER,
+          is_active: true,
+          deletedAt: null,
+        },
+      });
+      return customer;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getSingleCustomer(customer_id: string): Promise<User> {
+    try {
+      const customer = await this.prisma.user.findFirstOrThrow({
+        where: {
+          id: customer_id,
+        },
+        include: {
+          project: {
+            where: {
+              deletedAt: null,
+            },
+          },
         },
       });
       return customer;
@@ -41,6 +63,31 @@ export class CustomerService {
       return {
         message: messages.customer_created,
         customer: customer,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async deleteCustomer(customer_id: string): Promise<CustomerResponse> {
+    try {
+      await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: customer_id },
+          data: { deletedAt: new Date(), is_active: false },
+        }),
+        this.prisma.project.updateMany({
+          where: { customer_id: customer_id },
+          data: { deletedAt: new Date() },
+        }),
+        this.prisma.quote.updateMany({
+          where: { customer_id: customer_id },
+          data: { deletedAt: new Date() },
+        }),
+      ]);
+      return {
+        message: messages.customer_deleted,
+        customer: null,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);

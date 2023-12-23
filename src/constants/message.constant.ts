@@ -33,6 +33,7 @@ const messages = {
   customer_updated: 'Customer is updated',
   customer_exists: 'Customer already exist',
   customer_load: 'load set successfully',
+  customer_deleted: 'customer deleted',
   mark_customer_ready: 'Customer is ready',
 
   inventory_created: 'Inventory added',
