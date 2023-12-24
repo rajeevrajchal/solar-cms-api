@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
@@ -17,7 +18,8 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { CreateProjectInput } from './args/create_project.dto';
 import { HasRoles } from 'src/decorators/role.decorator';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
-import { Project, Role } from '@prisma/client';
+import { Project, Role, User } from '@prisma/client';
+import { AssignUserInProject } from './args/assign_user.dto';
 
 @Controller('project')
 export class ProjectController {
@@ -27,8 +29,21 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAndRolesGuard)
   @HasRoles(Role.SALE, Role.ENGINEER)
-  async getAllProject(@CurrentUser() user: any): Promise<Project[]> {
-    return this.projectService.getAllProject(user);
+  async getAllProject(
+    @CurrentUser() user: Partial<User>,
+    @Query('type') type: string,
+  ): Promise<Project[]> {
+    return this.projectService.getAllProject(user.id, type);
+  }
+
+  @Get(':project_id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAndRolesGuard)
+  @HasRoles(Role.SALE, Role.ENGINEER)
+  async getSingleProject(
+    @Param('project_id') project_id: string,
+  ): Promise<Project> {
+    return this.projectService.getSingleProject(project_id);
   }
 
   @Post()
@@ -54,13 +69,12 @@ export class ProjectController {
     );
   }
 
-  @Patch(':project_id/update-user/:user_id')
+  @Patch(':project_id/update-user')
   @HttpCode(HttpStatus.OK)
   async assignUserInProject(
-    @Param('project_id') project_id: string,
-    @Param('user_id') user_id: string,
+    @Body() payload: AssignUserInProject,
   ): Promise<ProjectResponse> {
-    return this.projectService.assignUserInProject(project_id, user_id);
+    return this.projectService.assignUserInProject(payload);
   }
 
   @Delete(':project_id')

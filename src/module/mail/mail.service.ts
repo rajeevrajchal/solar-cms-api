@@ -29,8 +29,10 @@ export class MailService {
     user: Partial<User>,
     project: Partial<Project>,
   ) {
-    const projectElectricLoadUrl =
-      this.configService.get<string>('PROJECT_LOAD_URL');
+    const projectElectricLoadUrl = `${this.configService.get<string>(
+      'FRONTEND_URL',
+    )}/${user.id}/electric_load/${project.id}`;
+
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Welcome to Eco Spark',
