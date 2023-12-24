@@ -3,12 +3,13 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElectricLoad } from './args/electric_load.dto';
 import messages from 'src/constants/message.constant';
-import { Project, ProjectStatus, User } from '@prisma/client';
+import { Project, ProjectStatus, Role, User } from '@prisma/client';
 import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectResponse } from './res/project-response';
 import { omit } from 'lodash';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { MailService } from '../mail/mail.service';
+import { AssignUserInProject } from './args/assign_user.dto';
 
 @Injectable()
 export class ProjectService {
@@ -27,12 +28,48 @@ export class ProjectService {
     });
   }
 
-  async getAllProject(user: User): Promise<Project[]> {
+  async getAllProject(user_id: string, query: string): Promise<Project[]> {
     try {
-      const project = this.prisma.project.findMany({
+      if (query && query === 'team') {
+        const projects = await this.prisma.project.findMany({
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            customer: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                id: true,
+              },
+            },
+            creator: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                id: true,
+              },
+            },
+            engineer: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                id: true,
+              },
+            },
+          },
+        });
+        return projects;
+      }
+      const projects = await this.prisma.project.findMany({
         where: {
-          creator_id: user.id,
-          deletedAt: null,
+          OR: [
+            { deletedAt: null, creator_id: user_id },
+            { deletedAt: null, engineer_id: user_id },
+          ],
         },
         include: {
           customer: {
@@ -43,6 +80,50 @@ export class ProjectService {
               id: true,
             },
           },
+        },
+      });
+      return projects;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getSingleProject(project_id: string): Promise<Project> {
+    try {
+      const project = this.prisma.project.findFirstOrThrow({
+        where: {
+          id: project_id,
+        },
+        include: {
+          customer: {
+            select: {
+              name: true,
+              email: true,
+              id: true,
+              role: true,
+            },
+          },
+          creator: {
+            select: {
+              name: true,
+              email: true,
+              id: true,
+              role: true,
+            },
+          },
+          engineer: {
+            select: {
+              name: true,
+              email: true,
+              id: true,
+              role: true,
+            },
+          },
+          children: true,
+          component: true,
+          equipment: true,
+          electric_load: true,
+          quote: true,
         },
       });
       return project;
@@ -125,22 +206,32 @@ export class ProjectService {
     }
   }
 
-  async assignUserInProject(project_id: string, user_id: string): Promise<any> {
+  async assignUserInProject(payload: AssignUserInProject): Promise<any> {
     try {
-      const user = await this.userChecker.checkUserExistById(user_id);
+      const { project_id, owner_id } = payload;
+      const user = await this.userChecker.checkUserExistById(owner_id);
       const project = await this.findProject(project_id);
       if (user && project) {
         await this.prisma.project.update({
           where: {
             id: project_id,
           },
-          data: {
-            engineer: {
-              connect: {
-                id: user?.id,
-              },
-            },
-          },
+          data:
+            user.role === Role.SALE.toLowerCase()
+              ? {
+                  creator: {
+                    connect: {
+                      id: user?.id,
+                    },
+                  },
+                }
+              : {
+                  engineer: {
+                    connect: {
+                      id: user?.id,
+                    },
+                  },
+                },
         });
         return {
           message: messages.project_assigned_engineer,
