@@ -149,8 +149,6 @@ export class ProjectService {
           customer: {
             select: {
               name: true,
-              email: true,
-              phone: true,
               location: true,
             },
           },
