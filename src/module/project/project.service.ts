@@ -132,6 +132,36 @@ export class ProjectService {
     }
   }
 
+  async getSinglePublicProject(project_id: string): Promise<Partial<Project>> {
+    try {
+      const project = this.prisma.project.findFirstOrThrow({
+        where: {
+          id: project_id,
+        },
+        select: {
+          name: true,
+          latitude: true,
+          longitude: true,
+          location: true,
+          panel_info: true,
+          battery_type: true,
+          cleaning: true,
+          customer: {
+            select: {
+              name: true,
+              email: true,
+              phone: true,
+              location: true,
+            },
+          },
+        },
+      });
+      return project;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async storeProject(
     project: Partial<CreateProjectInput>,
     user: User,
