@@ -31,7 +31,7 @@ export class MailService {
   ) {
     const projectElectricLoadUrl = `${this.configService.get<string>(
       'FRONTEND_URL',
-    )}/${user.id}/electric_load/${project.id}`;
+    )}/electric_load/${project.id}`;
 
     await this.mailerService.sendMail({
       to: user.email,

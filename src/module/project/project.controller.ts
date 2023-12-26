@@ -46,6 +46,14 @@ export class ProjectController {
     return this.projectService.getSingleProject(project_id);
   }
 
+  @Get('public/:project_id')
+  @HttpCode(HttpStatus.OK)
+  async getSinglePublicProject(
+    @Param('project_id') project_id: string,
+  ): Promise<Partial<Project>> {
+    return this.projectService.getSinglePublicProject(project_id);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAndRolesGuard)
