@@ -139,6 +139,7 @@ export class ProjectService {
           id: project_id,
         },
         select: {
+          id: true,
           name: true,
           latitude: true,
           longitude: true,
@@ -152,6 +153,7 @@ export class ProjectService {
               location: true,
             },
           },
+          electric_load: true,
         },
       });
       return project;

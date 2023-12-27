@@ -65,7 +65,7 @@ export class ProjectController {
     return this.projectService.storeProject(project_input, user);
   }
 
-  @Post(':project_id/electric-load')
+  @Post('public/:project_id/electric-load')
   @HttpCode(HttpStatus.CREATED)
   async storeCustomerElectricLoad(
     @Body() electric_load: ElectricLoad[],
