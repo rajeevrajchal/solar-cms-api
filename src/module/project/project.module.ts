@@ -7,6 +7,7 @@ import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { SlugService } from 'src/helpers/slug-generator.service';
 import { MailService } from '../mail/mail.service';
+import { SolarService } from 'src/helpers/solar.service';
 
 @Module({
   controllers: [ProjectController],
@@ -18,6 +19,7 @@ import { MailService } from '../mail/mail.service';
     UserCheckerService,
     SlugService,
     MailService,
+    SolarService,
   ],
 })
 export class ProjectModule {}
