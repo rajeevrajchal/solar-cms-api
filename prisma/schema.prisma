@@ -45,28 +45,6 @@ enum QuoteStatus {
   EXPIRED
 }
 
-enum ComponentType {
-  PANEL
-  BATTERY
-  TURBINE
-  INVERTOR
-}
-
-enum ConnectionType {
-  SERIES
-  PARALLEL
-  SERIES_PARALLEL
-}
-
-enum ComponentNature {
-  MONOCRYSTALLINE
-  POLYCRYSTALLINE
-  THIN_FILM
-  BIFACIAL
-  ACID
-  DRY_CELL
-}
-
 model User {
   id       String  @id @unique @default(uuid())
   name     String
@@ -206,9 +184,9 @@ model ProjectToTeam {
 
 model ProjectComponent {
   id              String          @id @unique @default(uuid())
-  component_type  ComponentType
-  connection_type ConnectionType
-  nature          ComponentNature
+  component_type  String
+  connection_type String
+  nature          String?
 
   name                    String?
   voltage                 Float?
@@ -220,6 +198,7 @@ model ProjectComponent {
   operation_temperature   Float?
   each_item_rating_volts  Float?
   each_item_rating_ampre  Float?
+  quantity Int?
 
   project    Project? @relation(fields: [project_id], references: [id])
   project_id String?
