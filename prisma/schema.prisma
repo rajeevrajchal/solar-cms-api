@@ -168,6 +168,7 @@ model Project {
   equipment     Equipment[]
   electric_load ElectricLoad[]
   quote         Quote[]
+  connections   ComponentConnection[] // Relation to ComponentConnection
 
   @@map("project")
 }
@@ -183,7 +184,7 @@ model ProjectToTeam {
 }
 
 model ProjectComponent {
-  id              String          @id @unique @default(uuid())
+  id              String  @id @unique @default(uuid())
   component_type  String
   connection_type String
   nature          String?
@@ -198,12 +199,32 @@ model ProjectComponent {
   operation_temperature   Float?
   each_item_rating_volts  Float?
   each_item_rating_ampre  Float?
-  quantity Int?
+  quantity                Int?
 
   project    Project? @relation(fields: [project_id], references: [id])
   project_id String?
 
+  connections_from ComponentConnection[] @relation("component_connection_from")
+  connections_to   ComponentConnection[] @relation("component_connection_to")
+
   @@map("project_component")
+}
+
+model ComponentConnection {
+  id                String           @id @unique @default(uuid())
+  project           Project          @relation(fields: [project_id], references: [id])
+  project_id        String
+  component_from    ProjectComponent @relation("component_connection_from", fields: [component_from_id], references: [id])
+  component_from_id String
+  component_to      ProjectComponent @relation("component_connection_to", fields: [component_to_id], references: [id])
+  component_to_id   String
+  connection_type   String
+
+  parent_id String
+  parent    ComponentConnection   @relation("child_component_connection", fields: [parent_id], references: [id])
+  children  ComponentConnection[] @relation("child_component_connection")
+
+  @@map("component_connection")
 }
 
 model Inventory {

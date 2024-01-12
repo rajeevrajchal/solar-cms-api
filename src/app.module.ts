@@ -9,6 +9,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './exception/exception';
 import { CustomerModule } from './module/customer/customer.module';
 import { ProjectModule } from './module/project/project.module';
+import { PublicModule } from './module/public/public.module';
 
 @Module({
   imports: [
@@ -20,8 +21,8 @@ import { ProjectModule } from './module/project/project.module';
     MailModule,
     CustomerModule,
     ProjectModule,
+    PublicModule,
   ],
-  controllers: [],
   providers: [
     PrismaService,
     {
