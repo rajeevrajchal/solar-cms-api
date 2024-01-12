@@ -1,7 +1,6 @@
 import { SlugService } from './../../helpers/slug-generator.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ElectricLoad } from './args/electric_load.dto';
 import messages from 'src/constants/message.constant';
 import { Project, ProjectStatus, Role, User } from '@prisma/client';
 import { CreateProjectInput } from './args/create_project.dto';
@@ -37,47 +36,11 @@ export class ProjectService {
 
   async getAllProject(user_id: string, query: string): Promise<Project[]> {
     try {
-      if (query && query === 'team') {
-        const projects = await this.prisma.project.findMany({
-          where: {
-            deletedAt: null,
-          },
-          include: {
-            customer: {
-              select: {
-                name: true,
-                email: true,
-                phone: true,
-                id: true,
-              },
-            },
-            creator: {
-              select: {
-                name: true,
-                email: true,
-                phone: true,
-                id: true,
-              },
-            },
-            engineer: {
-              select: {
-                name: true,
-                email: true,
-                phone: true,
-                id: true,
-              },
-            },
-          },
-        });
-        return projects;
-      }
+      console.log('the params', {
+        user_id,
+        query,
+      });
       const projects = await this.prisma.project.findMany({
-        where: {
-          OR: [
-            { deletedAt: null, creator_id: user_id },
-            { deletedAt: null, engineer_id: user_id },
-          ],
-        },
         include: {
           customer: {
             select: {
@@ -89,6 +52,68 @@ export class ProjectService {
           },
         },
       });
+      // if (query && query === 'team') {
+      //   const projects = await this.prisma.project.findMany({
+      //     where: {
+      //       deletedAt: null,
+      //       NOT: {
+      //         engineer: {
+      //           id: user_id,
+      //         },
+      //       },
+      //       OR: [
+      //         {
+      //           engineer: null,
+      //         },
+      //       ],
+      //     },
+      //     include: {
+      //       customer: {
+      //         select: {
+      //           name: true,
+      //           email: true,
+      //           phone: true,
+      //           id: true,
+      //         },
+      //       },
+      //       creator: {
+      //         select: {
+      //           name: true,
+      //           email: true,
+      //           phone: true,
+      //           id: true,
+      //         },
+      //       },
+      //       engineer: {
+      //         select: {
+      //           name: true,
+      //           email: true,
+      //           phone: true,
+      //           id: true,
+      //         },
+      //       },
+      //     },
+      //   });
+      //   return projects;
+      // }
+      // const projects = await this.prisma.project.findMany({
+      //   where: {
+      //     OR: [
+      //       { deletedAt: null, creator_id: user_id },
+      //       { deletedAt: null, engineer_id: user_id },
+      //     ],
+      //   },
+      //   include: {
+      //     customer: {
+      //       select: {
+      //         name: true,
+      //         email: true,
+      //         phone: true,
+      //         id: true,
+      //       },
+      //     },
+      //   },
+      // });
       return projects;
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -133,36 +158,6 @@ export class ProjectService {
           equipment: true,
           electric_load: true,
           quote: true,
-        },
-      });
-      return project;
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async getSinglePublicProject(project_id: string): Promise<Partial<Project>> {
-    try {
-      const project = this.prisma.project.findFirstOrThrow({
-        where: {
-          id: project_id,
-        },
-        select: {
-          id: true,
-          name: true,
-          latitude: true,
-          longitude: true,
-          location: true,
-          panel_info: true,
-          battery_type: true,
-          cleaning: true,
-          customer: {
-            select: {
-              name: true,
-              location: true,
-            },
-          },
-          electric_load: true,
         },
       });
       return project;
@@ -279,30 +274,6 @@ export class ProjectService {
         return {
           message: messages.project_updated,
           project: info,
-        };
-      }
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async storeProjectElectricLoad(
-    electric_load: ElectricLoad[],
-    project_id: string,
-  ): Promise<any> {
-    try {
-      const project = await this.findProject(project_id);
-      if (project) {
-        const param = electric_load.map((load) => ({
-          ...load,
-          watt_per_hour: load.hour * load.quantity * load.watt,
-          project_id: project_id,
-        }));
-        await this.prisma.electricLoad.createMany({
-          data: param,
-        });
-        return {
-          message: messages.electric_load_added,
         };
       }
     } catch (error) {

@@ -10,7 +10,7 @@ import { omit } from 'lodash';
 import messages from 'src/constants/message.constant';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { PasswordGeneratorService } from 'src/helpers/password-generator.service';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { UserUpdateInput } from './dto/args/user_update_input.dto';
 import { UserInput } from './dto/args/user_input.dto';
@@ -26,6 +26,21 @@ export class UserService {
     private readonly passwordGenerator: PasswordGeneratorService,
     private readonly mail: MailService,
   ) {}
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const user = await this.prisma.user.findMany({
+        where: {
+          is_active: true,
+          deletedAt: null,
+          role: Role.ENGINEER,
+        },
+      });
+      return user;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   async createUser(user_input: UserInput) {
     try {
