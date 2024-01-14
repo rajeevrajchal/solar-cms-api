@@ -41,6 +41,9 @@ export class ProjectService {
         query,
       });
       const projects = await this.prisma.project.findMany({
+        where: {
+          deletedAt: null,
+        },
         include: {
           customer: {
             select: {
@@ -52,68 +55,6 @@ export class ProjectService {
           },
         },
       });
-      // if (query && query === 'team') {
-      //   const projects = await this.prisma.project.findMany({
-      //     where: {
-      //       deletedAt: null,
-      //       NOT: {
-      //         engineer: {
-      //           id: user_id,
-      //         },
-      //       },
-      //       OR: [
-      //         {
-      //           engineer: null,
-      //         },
-      //       ],
-      //     },
-      //     include: {
-      //       customer: {
-      //         select: {
-      //           name: true,
-      //           email: true,
-      //           phone: true,
-      //           id: true,
-      //         },
-      //       },
-      //       creator: {
-      //         select: {
-      //           name: true,
-      //           email: true,
-      //           phone: true,
-      //           id: true,
-      //         },
-      //       },
-      //       engineer: {
-      //         select: {
-      //           name: true,
-      //           email: true,
-      //           phone: true,
-      //           id: true,
-      //         },
-      //       },
-      //     },
-      //   });
-      //   return projects;
-      // }
-      // const projects = await this.prisma.project.findMany({
-      //   where: {
-      //     OR: [
-      //       { deletedAt: null, creator_id: user_id },
-      //       { deletedAt: null, engineer_id: user_id },
-      //     ],
-      //   },
-      //   include: {
-      //     customer: {
-      //       select: {
-      //         name: true,
-      //         email: true,
-      //         phone: true,
-      //         id: true,
-      //       },
-      //     },
-      //   },
-      // });
       return projects;
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
