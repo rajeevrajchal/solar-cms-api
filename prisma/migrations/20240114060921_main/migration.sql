@@ -10,15 +10,6 @@ CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'RESOURCE_BLOCKED', 'CO
 -- CreateEnum
 CREATE TYPE "QuoteStatus" AS ENUM ('DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED');
 
--- CreateEnum
-CREATE TYPE "ComponentType" AS ENUM ('PANEL', 'BATTERY', 'TURBINE', 'INVERTOR');
-
--- CreateEnum
-CREATE TYPE "ConnectionType" AS ENUM ('SERIES', 'PARALLEL', 'SERIES_PARALLEL');
-
--- CreateEnum
-CREATE TYPE "ComponentNature" AS ENUM ('MONOCRYSTALLINE', 'POLYCRYSTALLINE', 'THIN_FILM', 'BIFACIAL', 'ACID', 'DRY_CELL');
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -27,9 +18,12 @@ CREATE TABLE "users" (
     "password" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'ENGINEER',
     "location" TEXT,
+    "phone" TEXT,
     "otp" DOUBLE PRECISION,
     "refresh_token" TEXT,
+    "reset_token" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT false,
+    "is_temp" BOOLEAN NOT NULL DEFAULT false,
     "otp_expiry" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,9 +59,10 @@ CREATE TABLE "customer_electric_load" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "watt" DOUBLE PRECISION NOT NULL,
+    "quantity" INTEGER NOT NULL,
     "hour" DOUBLE PRECISION NOT NULL,
     "watt_per_hour" DOUBLE PRECISION NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "project_id" TEXT NOT NULL,
 
     CONSTRAINT "customer_electric_load_pkey" PRIMARY KEY ("id")
 );
@@ -77,9 +72,10 @@ CREATE TABLE "project" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "latitude" TEXT,
-    "longitude" TEXT NOT NULL,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
     "location" TEXT,
+    "mark_location_customer" BOOLEAN DEFAULT false,
     "actual_area" DOUBLE PRECISION,
     "sun_hour_summer" DOUBLE PRECISION,
     "sun_hour_winter" DOUBLE PRECISION,
@@ -91,6 +87,8 @@ CREATE TABLE "project" (
     "power_out_watt" DOUBLE PRECISION,
     "power_out_voltage" DOUBLE PRECISION,
     "reserve_power_for" DOUBLE PRECISION,
+    "panel_info" TEXT,
+    "battery_type" TEXT,
     "cleaning" BOOLEAN NOT NULL DEFAULT false,
     "status" "ProjectStatus" NOT NULL DEFAULT 'NEW',
     "start_date" TIMESTAMP(3),
@@ -99,8 +97,9 @@ CREATE TABLE "project" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "customer_id" TEXT NOT NULL,
+    "creator_id" TEXT NOT NULL,
+    "engineer_id" TEXT,
     "parent_id" TEXT,
-    "quoteId" TEXT NOT NULL,
 
     CONSTRAINT "project_pkey" PRIMARY KEY ("id")
 );
@@ -116,9 +115,9 @@ CREATE TABLE "project_team_pivot" (
 -- CreateTable
 CREATE TABLE "project_component" (
     "id" TEXT NOT NULL,
-    "component_type" "ComponentType" NOT NULL,
-    "connection_type" "ConnectionType" NOT NULL,
-    "nature" "ComponentNature" NOT NULL,
+    "component_type" TEXT NOT NULL,
+    "connection_type" TEXT NOT NULL,
+    "nature" TEXT,
     "name" TEXT,
     "voltage" DOUBLE PRECISION,
     "amperage" DOUBLE PRECISION,
@@ -129,9 +128,22 @@ CREATE TABLE "project_component" (
     "operation_temperature" DOUBLE PRECISION,
     "each_item_rating_volts" DOUBLE PRECISION,
     "each_item_rating_ampre" DOUBLE PRECISION,
+    "quantity" INTEGER,
     "project_id" TEXT,
 
     CONSTRAINT "project_component_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "component_connection" (
+    "id" TEXT NOT NULL,
+    "project_id" TEXT NOT NULL,
+    "component_from_id" TEXT NOT NULL,
+    "component_to_id" TEXT NOT NULL,
+    "connection_type" TEXT NOT NULL,
+    "parent_id" TEXT NOT NULL,
+
+    CONSTRAINT "component_connection_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -208,6 +220,9 @@ CREATE UNIQUE INDEX "project_id_key" ON "project"("id");
 CREATE UNIQUE INDEX "project_component_id_key" ON "project_component"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "component_connection_id_key" ON "component_connection"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "inventory_id_key" ON "inventory"("id");
 
 -- CreateIndex
@@ -226,16 +241,19 @@ ALTER TABLE "user_team_pivot" ADD CONSTRAINT "user_team_pivot_user_id_fkey" FORE
 ALTER TABLE "user_team_pivot" ADD CONSTRAINT "user_team_pivot_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "customer_electric_load" ADD CONSTRAINT "customer_electric_load_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "project" ADD CONSTRAINT "project_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "customer_electric_load" ADD CONSTRAINT "customer_electric_load_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project" ADD CONSTRAINT "project_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project" ADD CONSTRAINT "project_quoteId_fkey" FOREIGN KEY ("quoteId") REFERENCES "quote"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "project" ADD CONSTRAINT "project_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "project" ADD CONSTRAINT "project_engineer_id_fkey" FOREIGN KEY ("engineer_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "project" ADD CONSTRAINT "project_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project_team_pivot" ADD CONSTRAINT "project_team_pivot_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -247,6 +265,18 @@ ALTER TABLE "project_team_pivot" ADD CONSTRAINT "project_team_pivot_team_id_fkey
 ALTER TABLE "project_component" ADD CONSTRAINT "project_component_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_component_from_id_fkey" FOREIGN KEY ("component_from_id") REFERENCES "project_component"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_component_to_id_fkey" FOREIGN KEY ("component_to_id") REFERENCES "project_component"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "component_connection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "equipment" ADD CONSTRAINT "equipment_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -254,3 +284,6 @@ ALTER TABLE "equipment" ADD CONSTRAINT "equipment_project_id_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "quote" ADD CONSTRAINT "quote_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "quote" ADD CONSTRAINT "quote_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
