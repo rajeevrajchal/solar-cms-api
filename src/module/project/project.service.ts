@@ -50,6 +50,7 @@ export class ProjectService {
               name: true,
               email: true,
               phone: true,
+              type: true,
               id: true,
             },
           },
@@ -76,6 +77,7 @@ export class ProjectService {
               role: true,
               location: true,
               phone: true,
+              type: true,
             },
           },
           creator: {
