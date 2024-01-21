@@ -13,7 +13,7 @@ export class MailService {
   async sendInvitation(user: Partial<User>) {
     await this.mailerService.sendMail({
       to: user.email,
-      subject: 'Welcome to Eco Spark',
+      subject: 'Welcome to Solar Studio',
       template: './invitation_email',
       context: {
         name: user.name,
@@ -35,7 +35,7 @@ export class MailService {
 
     await this.mailerService.sendMail({
       to: user.email,
-      subject: 'Welcome to Eco Spark',
+      subject: 'Welcome to Solar Studio',
       template: './project_info_customer',
       context: {
         company_name: this.configService.get<string>('COMPANY_NAME'),

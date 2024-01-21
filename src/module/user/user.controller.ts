@@ -8,6 +8,7 @@ import {
   Patch,
   Param,
   Get,
+  Delete,
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
@@ -25,10 +26,15 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @HasRoles(Role.SALE, Role.ENGINEER)
   @HttpCode(HttpStatus.OK)
-  async getAllCustomer(): Promise<User[]> {
+  async getAllUsers(): Promise<Partial<User>[]> {
     return this.userService.getAllUsers();
+  }
+
+  @Get(':user_id')
+  @HttpCode(HttpStatus.OK)
+  async getUserDetail(@Param('user_id') user_id: string): Promise<User> {
+    return this.userService.getUserDetail(user_id);
   }
 
   @HttpCode(HttpStatus.CREATED)
@@ -47,5 +53,28 @@ export class UserController {
     },
   ): Promise<UserResponse> {
     return this.userService.updateUser(user_input, params.user_id);
+  }
+
+  @Delete(':user_id')
+  @HttpCode(HttpStatus.OK)
+  async deleteProject(
+    @Param('user_id') user_id: string,
+  ): Promise<UserResponse> {
+    return this.userService.deleteUser(user_id);
+  }
+
+  @Patch('toggle-status/:user_id')
+  @HttpCode(HttpStatus.OK)
+  async toggleUserActive(
+    @Param('user_id') user_id: string,
+  ): Promise<UserResponse> {
+    return this.userService.toggleUserActive(user_id);
+  }
+
+  @Get('engineer')
+  @HasRoles(Role.SALE, Role.ENGINEER)
+  @HttpCode(HttpStatus.OK)
+  async getAllEngineers(): Promise<Partial<User>[]> {
+    return this.userService.getAllEngineers();
   }
 }
