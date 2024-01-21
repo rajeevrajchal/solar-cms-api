@@ -2,5 +2,5 @@ import { User } from '@prisma/client';
 
 export class UserResponse {
   message: string;
-  user: User;
+  user?: Omit<User, 'password'> | null;
 }

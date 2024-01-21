@@ -8,13 +8,27 @@ import { CustomerResponse } from './dto/res/customer-response';
 export class CustomerService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllCustomer(): Promise<User[]> {
+  async getAllCustomer(): Promise<Partial<User>[]> {
     try {
       const customer = await this.prisma.user.findMany({
         where: {
           role: Role.CUSTOMER,
           is_active: true,
           deletedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          type: true,
+          location: true,
+          phone: true,
+          otp: true,
+          is_active: true,
+          deletedAt: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
       return customer;

@@ -23,7 +23,7 @@ import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectInsightInput } from './args/project_insight_input';
 
 @UseGuards(JwtAndRolesGuard)
-@HasRoles(Role.SALE, Role.ENGINEER)
+@HasRoles(Role.SALE, Role.ENGINEER, Role.ADMIN)
 @Controller('project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}

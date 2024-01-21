@@ -17,14 +17,14 @@ import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
 import { Role, User } from '@prisma/client';
 
 @UseGuards(JwtAndRolesGuard)
-@HasRoles(Role.SALE, Role.ENGINEER)
+@HasRoles(Role.SALE, Role.ENGINEER, Role.ADMIN)
 @Controller('customer')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getAllCustomer(): Promise<User[]> {
+  async getAllCustomer(): Promise<Partial<User>[]> {
     return this.customerService.getAllCustomer();
   }
 
@@ -32,7 +32,7 @@ export class CustomerController {
   @HttpCode(HttpStatus.OK)
   async getSingleCustomer(
     @Param('customer_id') customer_id: string,
-  ): Promise<User> {
+  ): Promise<Partial<User>> {
     return this.customerService.getSingleCustomer(customer_id);
   }
 

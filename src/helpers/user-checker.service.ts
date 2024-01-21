@@ -21,6 +21,9 @@ export class UserCheckerService {
       where: {
         id: id,
       },
+      include: {
+        project: true,
+      },
     });
   }
 }
