@@ -53,6 +53,9 @@ const messages = {
   user_cannot_delete_has_connected_project:
     'User cannot be deleted, has connect project',
   user_toggle: 'user status changed',
+
+  vendor_created: 'Vendor Created',
+  vendor_updated: 'Vendor Updated',
 };
 
 export default messages;

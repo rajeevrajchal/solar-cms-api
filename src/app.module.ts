@@ -10,6 +10,7 @@ import { AllExceptionsFilter } from './exception/exception';
 import { CustomerModule } from './module/customer/customer.module';
 import { ProjectModule } from './module/project/project.module';
 import { PublicModule } from './module/public/public.module';
+import { VendorModule } from './module/vendor/vendor.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PublicModule } from './module/public/public.module';
     CustomerModule,
     ProjectModule,
     PublicModule,
+    VendorModule,
   ],
   providers: [
     PrismaService,
