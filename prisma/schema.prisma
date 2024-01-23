@@ -228,10 +228,27 @@ model ComponentConnection {
   @@map("component_connection")
 }
 
+model Vendor {
+  id          String  @id @unique @default(uuid())
+  name        String
+  code        String
+  description String?
+  email       String?
+  phone       String?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  inventory Inventory[]
+
+  @@map("vendor")
+}
+
 model Inventory {
-  id            String  @id @unique @default(uuid())
-  name          String
-  brand         String
+  id   String @id @unique @default(uuid())
+  name String
+
   kind          String
   type          String?
   product_image String?
@@ -249,6 +266,9 @@ model Inventory {
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
+
+  vendor    Vendor? @relation(fields: [vendor_id], references: [id])
+  vendor_id String
 
   equipment Equipment[]
 
