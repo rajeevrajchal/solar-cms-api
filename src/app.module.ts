@@ -11,6 +11,7 @@ import { CustomerModule } from './module/customer/customer.module';
 import { ProjectModule } from './module/project/project.module';
 import { PublicModule } from './module/public/public.module';
 import { VendorModule } from './module/vendor/vendor.module';
+import { InventoryModule } from './module/inventory/inventory.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { VendorModule } from './module/vendor/vendor.module';
     ProjectModule,
     PublicModule,
     VendorModule,
+    InventoryModule,
   ],
   providers: [
     PrismaService,

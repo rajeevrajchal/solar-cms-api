@@ -37,6 +37,12 @@ enum TaskStatus {
   COMPLETE
 }
 
+enum InventoryStatus {
+  DRAFT
+  ACTIVE
+  REMOVED
+}
+
 enum QuoteStatus {
   DRAFT
   SENT
@@ -249,19 +255,21 @@ model Inventory {
   id   String @id @unique @default(uuid())
   name String
 
-  kind          String
-  type          String?
+  category      String
+  nature        String?
   product_image String?
   description   String?
-  size          String?
 
-  capacity Float?
-  watt     Float?
-  voltage  Float?
-  ampere   Float?
-  cost     Float
+  watt    Float?
+  voltage Float?
+  ampere  Float?
 
-  attribute Json?
+  buying_cost       Float
+  selling_cost      Float
+  max_flat_discount Float
+  max_discount      Float
+
+  status InventoryStatus
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

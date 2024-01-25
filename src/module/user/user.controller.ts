@@ -33,6 +33,7 @@ export class UserController {
 
   @Get(':user_id')
   @HttpCode(HttpStatus.OK)
+  @HasRoles(Role.ADMIN, Role.ENGINEER, Role.SALE)
   async getUserDetail(@Param('user_id') user_id: string): Promise<User> {
     return this.userService.getUserDetail(user_id);
   }
