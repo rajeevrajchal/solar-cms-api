@@ -4,17 +4,26 @@ import { Vendor } from '@prisma/client';
 import { CreateVendorInput } from './args/create.dto';
 import { VendorResponse } from './res/response';
 import messages from 'src/constants/message.constant';
+import { SearchParamsDto } from 'src/dto/search-decorators';
 
 @Injectable()
 export class VendorService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllVendors(): Promise<Vendor[]> {
+  async getAllVendors(query?: SearchParamsDto): Promise<Vendor[]> {
     try {
+      const { search } = query;
+      const where: any = {
+        deletedAt: null,
+      };
+      if (search) {
+        where.name = {
+          contains: search,
+          mode: 'insensitive',
+        };
+      }
       const vendors = await this.prisma.vendor.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where,
       });
       return vendors;
     } catch (error) {

@@ -7,11 +7,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { VendorService } from './vendor.service';
 import { Vendor } from '@prisma/client';
 import { CreateVendorInput } from './args/create.dto';
 import { VendorResponse } from './res/response';
+import { SearchParamsDto } from 'src/dto/search-decorators';
 
 @Controller('vendor')
 export class VendorController {
@@ -19,8 +21,8 @@ export class VendorController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getAllVendor(): Promise<Vendor[]> {
-    return this.vendorService.getAllVendors();
+  async getAllVendor(@Query() query: SearchParamsDto): Promise<Vendor[]> {
+    return this.vendorService.getAllVendors(query);
   }
 
   @Get(':vendor_id')
