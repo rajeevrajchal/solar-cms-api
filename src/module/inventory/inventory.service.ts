@@ -4,22 +4,41 @@ import { Inventory, InventoryStatus } from '@prisma/client';
 import { InventoryInput } from './args/create.dto';
 import { InventoryResponse } from './res/response';
 import messages from 'src/constants/message.constant';
+import { QueryParamsDto } from './args/query-decorators';
 
 @Injectable()
 export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async all(): Promise<Inventory[]> {
+  async all(query?: QueryParamsDto): Promise<Inventory[]> {
     try {
-      const inventory = await this.prisma.inventory.findMany({
-        where: {
-          deletedAt: null,
-          NOT: {
-            status: InventoryStatus.REMOVED,
-          },
+      const { vendor, search, category } = query;
+      const where: any = {
+        deletedAt: null,
+        NOT: {
+          status: InventoryStatus.REMOVED,
         },
+        category: category,
+        vendor_id: vendor,
+      };
+
+      if (search) {
+        where.name = {
+          contains: search,
+          mode: 'insensitive',
+        };
+      }
+
+      const inventories = await this.prisma.inventory.findMany({
+        where,
+        include: {
+          vendor: true,
+        },
+        take: Number(query?.limit) || 10,
+        skip: Number(query?.offset) || 0,
       });
-      return inventory;
+
+      return inventories;
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -65,6 +84,26 @@ export class InventoryService {
           ...payload,
           status: InventoryStatus.DRAFT,
         } as any,
+      });
+      return {
+        message: messages.inventory_created,
+        inventory,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async update(
+    payload: InventoryInput,
+    inventory_id: string,
+  ): Promise<InventoryResponse> {
+    try {
+      const inventory = await this.prisma.inventory.update({
+        where: {
+          id: inventory_id,
+        },
+        data: payload as any,
       });
       return {
         message: messages.inventory_created,
