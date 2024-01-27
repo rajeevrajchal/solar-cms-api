@@ -1,14 +1,21 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { Inventory, InventoryStatus } from '@prisma/client';
 import { InventoryInput } from './args/create.dto';
 import { InventoryResponse } from './res/response';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from './args/query-decorators';
+import { CsvService } from 'src/helpers/csv.service';
+import { omit } from 'lodash';
+import { Response } from 'express';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly csvParse: CsvService,
+  ) {}
 
   async all(query?: QueryParamsDto): Promise<Inventory[]> {
     try {
@@ -72,6 +79,62 @@ export class InventoryService {
         message: messages.inventory_created,
         inventory,
       };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async parse_csv(csv: Express.Multer.File): Promise<InventoryResponse> {
+    try {
+      const rows: any = await this.csvParse.parseCsv(csv);
+      const payload = rows.map((row) => ({
+        ...omit(row, ['createdAt', 'updatedAt', 'status', '__parsed_extra']),
+      }));
+      await this.prisma.inventory.createMany({
+        data: payload,
+      });
+      return {
+        message: messages.inventory_parsed,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async download_csv(res: Response): Promise<any> {
+    try {
+      const inventories = await this.prisma.inventory.findMany({
+        where: {
+          deletedAt: null,
+          NOT: {
+            status: InventoryStatus.REMOVED,
+          },
+        },
+        select: {
+          name: true,
+          category: true,
+          watt: true,
+          voltage: true,
+          ampere: true,
+          buying_cost: true,
+          selling_cost: true,
+          max_flat_discount: true,
+          max_discount: true,
+          createdAt: true,
+          updatedAt: true,
+          vendor: true,
+        },
+      });
+      const file = await this.csvParse.jsonToCSV(
+        inventories.map((item) => ({
+          ...omit(item, ['vendor']),
+          vendor: item?.vendor?.name,
+        })),
+      );
+      const filename = `inventory-${new Date().toISOString()}.csv`;
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.status(HttpStatus.OK).send(file);
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }

@@ -8,12 +8,17 @@ import {
   Patch,
   Post,
   Query,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { InventoryService } from './inventory.service';
 import { Inventory } from '@prisma/client';
 import { InventoryInput } from './args/create.dto';
 import { InventoryResponse } from './res/response';
 import { QueryParamsDto } from './args/query-decorators';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('inventory')
 export class InventoryController {
@@ -39,6 +44,21 @@ export class InventoryController {
     @Body() input: InventoryInput,
   ): Promise<InventoryResponse> {
     return this.inventoryService.create(input);
+  }
+
+  @Post('parse-csv')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  async parseCSVInventory(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<InventoryResponse> {
+    return this.inventoryService.parse_csv(file);
+  }
+
+  @Get('download-csv')
+  @HttpCode(HttpStatus.OK)
+  async downloadCSV(@Res() res: Response): Promise<any> {
+    return this.inventoryService.download_csv(res);
   }
 
   @Post('as-draft')

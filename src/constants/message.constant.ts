@@ -4,6 +4,7 @@ const messages = {
   user_not_active: 'User is not active',
   change_your_password_first: 'Change your password on first login',
   login_error: 'Login Error',
+  internal_server_error: 'Internal Server Error',
 
   password_changed: 'Password changed successfully',
 
@@ -39,6 +40,7 @@ const messages = {
   inventory_created: 'Inventory added',
   inventory_updated: 'Inventory Updated',
   inventory_deleted: 'Inventory Deleted',
+  inventory_parsed: 'Inventory Parsed',
 
   quote_new: 'New quote number',
   quote_created: 'Quote created and send',

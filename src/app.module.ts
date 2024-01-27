@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
 
 import { PrismaService } from './module/prisma/prisma.service';
 import { UserModule } from './module/user/user.module';
@@ -12,12 +13,14 @@ import { ProjectModule } from './module/project/project.module';
 import { PublicModule } from './module/public/public.module';
 import { VendorModule } from './module/vendor/vendor.module';
 import { InventoryModule } from './module/inventory/inventory.module';
+import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // no need to import into other modules
     }),
+    MulterModule.register(),
     UserModule,
     AuthModule,
     MailModule,
@@ -26,6 +29,7 @@ import { InventoryModule } from './module/inventory/inventory.module';
     PublicModule,
     VendorModule,
     InventoryModule,
+    CloudinaryModule,
   ],
   providers: [
     PrismaService,
