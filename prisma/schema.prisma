@@ -269,14 +269,14 @@ model Inventory {
   max_flat_discount Float
   max_discount      Float
 
-  status InventoryStatus
+  status InventoryStatus @default(ACTIVE)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
   vendor    Vendor? @relation(fields: [vendor_id], references: [id])
-  vendor_id String
+  vendor_id String?
 
   equipment Equipment[]
 
