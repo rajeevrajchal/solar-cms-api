@@ -31,6 +31,13 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
+  @Get('engineer')
+  @HttpCode(HttpStatus.OK)
+  @HasRoles(Role.ADMIN, Role.SALE, Role.ENGINEER)
+  async getEngineers(): Promise<Partial<User>[]> {
+    return this.userService.getAllEngineers();
+  }
+
   @Get(':user_id')
   @HttpCode(HttpStatus.OK)
   @HasRoles(Role.ADMIN, Role.ENGINEER, Role.SALE)
@@ -70,12 +77,5 @@ export class UserController {
     @Param('user_id') user_id: string,
   ): Promise<UserResponse> {
     return this.userService.toggleUserActive(user_id);
-  }
-
-  @Get('engineer')
-  @HasRoles(Role.SALE, Role.ENGINEER)
-  @HttpCode(HttpStatus.OK)
-  async getAllEngineers(): Promise<Partial<User>[]> {
-    return this.userService.getAllEngineers();
   }
 }

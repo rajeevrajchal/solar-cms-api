@@ -8,7 +8,7 @@ async function main() {
     update: {},
     create: {
       name: 'Guest Customer',
-      email: 'guest_customer@studio.io',
+      email: 'guest@studio.io',
       role: Role.CUSTOMER,
       type: 'guest',
       password: '',
