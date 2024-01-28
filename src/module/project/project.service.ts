@@ -23,6 +23,36 @@ export class ProjectService {
     private readonly solarService: SolarService,
   ) {}
 
+  projectAttribute = {
+    customer: {
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        role: true,
+        location: true,
+        phone: true,
+        type: true,
+      },
+    },
+    creator: {
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        role: true,
+      },
+    },
+    engineer: {
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        role: true,
+      },
+    },
+  };
+
   async findProject(project_id): Promise<Project> {
     return this.prisma.project.findFirstOrThrow({
       where: {
@@ -44,17 +74,7 @@ export class ProjectService {
         where: {
           deletedAt: null,
         },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-              phone: true,
-              type: true,
-              id: true,
-            },
-          },
-        },
+        include: this.projectAttribute,
       });
       return projects;
     } catch (error) {
@@ -69,33 +89,7 @@ export class ProjectService {
           id: project_id,
         },
         include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-              id: true,
-              role: true,
-              location: true,
-              phone: true,
-              type: true,
-            },
-          },
-          creator: {
-            select: {
-              name: true,
-              email: true,
-              id: true,
-              role: true,
-            },
-          },
-          engineer: {
-            select: {
-              name: true,
-              email: true,
-              id: true,
-              role: true,
-            },
-          },
+          ...this.projectAttribute,
           children: true,
           component: true,
           equipment: true,
@@ -138,6 +132,10 @@ export class ProjectService {
               id: user?.id,
             },
           },
+          engineer:
+            user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
+          sale_user:
+            user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
           sun_hour_average: sun_hours.some((item) => item === null)
             ? 0
             : sun_hours.reduce((acc, val) => {
@@ -173,8 +171,6 @@ export class ProjectService {
           project.latitude,
           project.longitude,
         );
-
-        console.log('solarPowerHours', solarPowerHours);
 
         const sun_hours = [
           project.sun_hour_monsoon || solarPowerHours.monsoon,
@@ -234,23 +230,13 @@ export class ProjectService {
           where: {
             id: project_id,
           },
-          data:
-            user.role === Role.SALE.toLowerCase()
-              ? {
-                  creator: {
-                    connect: {
-                      id: user?.id,
-                    },
-                  },
-                }
-              : {
-                  engineer: {
-                    connect: {
-                      id: user?.id,
-                    },
-                  },
-                  status: ProjectStatus.SITE_SURVEY,
-                },
+          data: {
+            engineer:
+              user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
+            sale_user:
+              user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
+            status: ProjectStatus.SITE_SURVEY,
+          },
         });
         return {
           message: messages.project_assigned_engineer,

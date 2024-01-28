@@ -8,6 +8,9 @@ CREATE TYPE "ProjectStatus" AS ENUM ('NEW', 'SITE_SURVEY', 'CUSTOMER_INQUIRY', '
 CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'RESOURCE_BLOCKED', 'COMPLETE');
 
 -- CreateEnum
+CREATE TYPE "InventoryStatus" AS ENUM ('DRAFT', 'ACTIVE', 'REMOVED');
+
+-- CreateEnum
 CREATE TYPE "QuoteStatus" AS ENUM ('DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED');
 
 -- CreateTable
@@ -17,6 +20,7 @@ CREATE TABLE "users" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'ENGINEER',
+    "type" TEXT,
     "location" TEXT,
     "phone" TEXT,
     "otp" DOUBLE PRECISION,
@@ -99,6 +103,7 @@ CREATE TABLE "project" (
     "customer_id" TEXT NOT NULL,
     "creator_id" TEXT NOT NULL,
     "engineer_id" TEXT,
+    "sale_user_id" TEXT,
     "parent_id" TEXT,
 
     CONSTRAINT "project_pkey" PRIMARY KEY ("id")
@@ -147,24 +152,40 @@ CREATE TABLE "component_connection" (
 );
 
 -- CreateTable
-CREATE TABLE "inventory" (
+CREATE TABLE "vendor" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "brand" TEXT NOT NULL,
-    "kind" TEXT NOT NULL,
-    "type" TEXT,
-    "product_image" TEXT,
+    "code" TEXT NOT NULL,
     "description" TEXT,
-    "size" TEXT,
-    "capacity" DOUBLE PRECISION,
-    "watt" DOUBLE PRECISION,
-    "voltage" DOUBLE PRECISION,
-    "ampere" DOUBLE PRECISION,
-    "cost" DOUBLE PRECISION NOT NULL,
-    "attribute" JSONB,
+    "email" TEXT,
+    "phone" TEXT,
     "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "vendor_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "inventory" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "nature" TEXT,
+    "product_image" TEXT,
+    "description" TEXT,
+    "watt" DOUBLE PRECISION,
+    "voltage" DOUBLE PRECISION,
+    "ampere" DOUBLE PRECISION,
+    "buying_cost" DOUBLE PRECISION NOT NULL,
+    "selling_cost" DOUBLE PRECISION NOT NULL,
+    "max_flat_discount" DOUBLE PRECISION NOT NULL,
+    "max_discount" DOUBLE PRECISION NOT NULL,
+    "status" "InventoryStatus" NOT NULL DEFAULT 'ACTIVE',
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "vendor_id" TEXT,
 
     CONSTRAINT "inventory_pkey" PRIMARY KEY ("id")
 );
@@ -223,6 +244,9 @@ CREATE UNIQUE INDEX "project_component_id_key" ON "project_component"("id");
 CREATE UNIQUE INDEX "component_connection_id_key" ON "component_connection"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "vendor_id_key" ON "vendor"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "inventory_id_key" ON "inventory"("id");
 
 -- CreateIndex
@@ -253,6 +277,9 @@ ALTER TABLE "project" ADD CONSTRAINT "project_creator_id_fkey" FOREIGN KEY ("cre
 ALTER TABLE "project" ADD CONSTRAINT "project_engineer_id_fkey" FOREIGN KEY ("engineer_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "project" ADD CONSTRAINT "project_sale_user_id_fkey" FOREIGN KEY ("sale_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "project" ADD CONSTRAINT "project_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -275,6 +302,9 @@ ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_componen
 
 -- AddForeignKey
 ALTER TABLE "component_connection" ADD CONSTRAINT "component_connection_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "component_connection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inventory" ADD CONSTRAINT "inventory_vendor_id_fkey" FOREIGN KEY ("vendor_id") REFERENCES "vendor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "equipment" ADD CONSTRAINT "equipment_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
