@@ -141,7 +141,10 @@ export class ProjectService {
             : sun_hours.reduce((acc, val) => {
                 return val !== null ? acc * val : acc;
               }, 1) / sun_hours.length,
-          status: ProjectStatus.NEW,
+          status:
+            user?.role === Role.ENGINEER
+              ? ProjectStatus.SITE_SURVEY
+              : ProjectStatus.NEW,
         };
         const info = await this.prisma.project.create({
           data: params,
@@ -220,6 +223,32 @@ export class ProjectService {
     }
   }
 
+  // TODO: In future
+  async copyProject(project_id: string): Promise<ProjectResponse> {
+    try {
+      const project: any = await this.findProject(project_id);
+      const new_project = await this.prisma.project.create({
+        data: {
+          ...omit(project, [
+            'id',
+            'deletedAt',
+            'createdAt',
+            'updatedAt',
+            'start_date',
+            'end_data',
+          ]),
+          status: ProjectStatus.NEW,
+        } as any,
+      });
+      return {
+        message: messages.project_copied,
+        project: new_project,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async assignUserInProject(payload: AssignUserInProject): Promise<any> {
     try {
       const { project_id, owner_id } = payload;
@@ -281,16 +310,6 @@ export class ProjectService {
       if (!isProjectExist) {
         throw new HttpException('project not found', HttpStatus.BAD_REQUEST);
       }
-      const params: any = map(project?.components, (item) => ({
-        ...item,
-        project_id: project.id,
-        loose_connection_factor: 0.8,
-        efficiency: 100,
-        operation_temperature: null,
-      }));
-      await this.prisma.projectComponent.createMany({
-        data: params,
-      });
       const sun_hours = [
         project?.sun_hours?.sun_hour_monsoon || isProjectExist.sun_hour_monsoon,
         project?.sun_hours?.sun_hour_summer || isProjectExist.sun_hour_summer,
@@ -321,6 +340,34 @@ export class ProjectService {
       return {
         message: messages.project_updated,
         project: updatedProject,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateProjectEquipment(
+    input: any,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const isProjectExist = await this.findProject(project_id);
+      const params: any = map(input, (item) => ({
+        ...item,
+        project_id: project_id,
+        loose_connection_factor: 0.8,
+        efficiency: 100,
+        operation_temperature: null,
+      }));
+      await this.prisma.projectComponent.createMany({
+        data: params,
+      });
+      if (!isProjectExist) {
+        throw new HttpException('project not found', HttpStatus.BAD_REQUEST);
+      }
+      return {
+        message: messages.project_equipment,
+        project: {},
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
