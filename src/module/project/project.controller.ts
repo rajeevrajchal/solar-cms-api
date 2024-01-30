@@ -62,6 +62,14 @@ export class ProjectController {
     return this.projectService.updateProject(project_input, user);
   }
 
+  @Patch('copy/:project_id')
+  @HttpCode(HttpStatus.OK)
+  async copyProject(
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.copyProject(project_id);
+  }
+
   @Patch(':project_id/update-user')
   @HttpCode(HttpStatus.OK)
   async assignUserInProject(
@@ -76,6 +84,15 @@ export class ProjectController {
     @Body() project_input: Partial<ProjectInsightInput>,
   ): Promise<ProjectResponse> {
     return this.projectService.updateProjectInsight(project_input);
+  }
+
+  @Patch(':project_id/equipment')
+  @HttpCode(HttpStatus.OK)
+  async updateProjectEquipment(
+    @Body() input: any,
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.updateProjectEquipment(input, project_id);
   }
 
   @Delete(':project_id')

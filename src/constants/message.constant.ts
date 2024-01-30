@@ -29,6 +29,7 @@ const messages = {
   project_design_added: 'File added to design',
   project_not_found: 'Project not found',
   magic_project: 'Magic project',
+  project_equipment: 'Equipment assigned to project',
 
   customer_created: 'Customer is created',
   customer_updated: 'Customer is updated',
@@ -58,6 +59,7 @@ const messages = {
 
   vendor_created: 'Vendor Created',
   vendor_updated: 'Vendor Updated',
+  project_copied: 'Project Copied',
 };
 
 export default messages;
