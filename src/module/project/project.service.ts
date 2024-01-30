@@ -5,7 +5,7 @@ import messages from 'src/constants/message.constant';
 import { Project, ProjectStatus, Role, User } from '@prisma/client';
 import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectResponse } from './res/project-response';
-import { map, omit } from 'lodash';
+import { isEmpty, map, omit } from 'lodash';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { MailService } from '../mail/mail.service';
 import { AssignUserInProject } from './args/assign_user.dto';
@@ -91,10 +91,13 @@ export class ProjectService {
         include: {
           ...this.projectAttribute,
           children: true,
-          component: true,
-          equipment: true,
-          electric_load: true,
+          equipment: {
+            include: {
+              inventory: true,
+            },
+          },
           quote: true,
+          electric_load: true,
         },
       });
       return project;
@@ -352,19 +355,37 @@ export class ProjectService {
   ): Promise<ProjectResponse> {
     try {
       const isProjectExist = await this.findProject(project_id);
-      const params: any = map(input, (item) => ({
-        ...item,
-        project_id: project_id,
-        loose_connection_factor: 0.8,
-        efficiency: 100,
-        operation_temperature: null,
-      }));
-      await this.prisma.projectComponent.createMany({
-        data: params,
-      });
-      if (!isProjectExist) {
-        throw new HttpException('project not found', HttpStatus.BAD_REQUEST);
+      if (isEmpty(isProjectExist)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
+      const payload = map(input.equipments, (data) => {
+        return {
+          quantity: Number(data.quantity),
+          component: data.component_type,
+          connection: data.connection,
+          set_name: data.set_name,
+          voltage: data?.voltage || 0,
+          ampere: data?.ampere || 0,
+          watt: data?.watt || 0,
+          inventory_id: data.inventory,
+          project_id: project_id,
+        };
+      });
+
+      await this.prisma.equipment.createMany({
+        data: payload,
+      });
+      await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.CUSTOMER_INQUIRY,
+        },
+      });
       return {
         message: messages.project_equipment,
         project: {},

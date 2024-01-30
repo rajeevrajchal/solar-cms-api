@@ -19,6 +19,7 @@ import { InventoryInput } from './args/create.dto';
 import { InventoryResponse } from './res/response';
 import { QueryParamsDto } from './args/query-decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Readable } from 'stream';
 
 @Controller('inventory')
 export class InventoryController {
@@ -58,7 +59,17 @@ export class InventoryController {
   @Get('download-csv')
   @HttpCode(HttpStatus.OK)
   async downloadCSV(@Res() res: Response): Promise<any> {
-    return this.inventoryService.download_csv(res);
+    const data: any = this.inventoryService.download_csv();
+    const stream = new Readable();
+
+    stream.push(data.file);
+    stream.push(null);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${data.filename}`,
+    );
+    return stream.pipe(res);
   }
 
   @Post('as-draft')

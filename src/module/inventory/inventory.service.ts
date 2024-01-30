@@ -8,7 +8,6 @@ import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from './args/query-decorators';
 import { CsvService } from 'src/helpers/csv.service';
 import { omit } from 'lodash';
-import { Response } from 'express';
 
 @Injectable()
 export class InventoryService {
@@ -41,8 +40,6 @@ export class InventoryService {
         include: {
           vendor: true,
         },
-        take: Number(query?.limit) || 10,
-        skip: Number(query?.offset) || 0,
       });
 
       return inventories;
@@ -90,6 +87,7 @@ export class InventoryService {
       const payload = rows.map((row) => ({
         ...omit(row, ['createdAt', 'updatedAt', 'status', '__parsed_extra']),
       }));
+      console.log('the payload', payload);
       await this.prisma.inventory.createMany({
         data: payload,
       });
@@ -101,7 +99,7 @@ export class InventoryService {
     }
   }
 
-  async download_csv(res: Response): Promise<any> {
+  async download_csv(): Promise<any> {
     try {
       const inventories = await this.prisma.inventory.findMany({
         where: {
@@ -132,9 +130,10 @@ export class InventoryService {
         })),
       );
       const filename = `inventory-${new Date().toISOString()}.csv`;
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-      res.status(HttpStatus.OK).send(file);
+      return {
+        filename,
+        file,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
