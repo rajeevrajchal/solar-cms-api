@@ -14,6 +14,7 @@ import { PublicModule } from './module/public/public.module';
 import { VendorModule } from './module/vendor/vendor.module';
 import { InventoryModule } from './module/inventory/inventory.module';
 import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
+import { QuoteModule } from './module/quote/quote.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
     VendorModule,
     InventoryModule,
     CloudinaryModule,
+    QuoteModule,
   ],
   providers: [
     PrismaService,

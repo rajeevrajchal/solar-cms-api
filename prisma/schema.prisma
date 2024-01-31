@@ -72,12 +72,13 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 
-  team      UserToTeam[]
-  project   Project[]    @relation("customer_project")
-  creator   Project[]    @relation("creator_project")
-  engineer  Project[]    @relation("engineer_project")
-  sale_user Project[]    @relation("sale_user")
-  quote     Quote[]
+  team           UserToTeam[]
+  project        Project[]    @relation("customer_project")
+  creator        Project[]    @relation("creator_project")
+  engineer       Project[]    @relation("engineer_project")
+  sale_user      Project[]    @relation("sale_user")
+  customer_quote Quote[]      @relation("customer_quote")
+  creator_quote  Quote[]      @relation("creator_quote")
 
   @@map("users")
 }
@@ -244,10 +245,10 @@ model Equipment {
   id          String  @id @unique @default(uuid())
   quantity    Int
   information String?
-  component String
+  component   String
   connection  String? @default("parallel")
   set_name    String?
-  voltage    Float?
+  voltage     Float?
   ampere      Float?
   watt        Float?
 
@@ -262,7 +263,7 @@ model Equipment {
 
 model Quote {
   id                String      @id @unique @default(uuid())
-  sn                Int         @unique()
+  name              String
   inventory_cost    Float       @default(0)
   net_total         Float       @default(0)
   installation_cost Float       @default(0)
@@ -274,8 +275,11 @@ model Quote {
 
   project_id  String
   customer_id String
-  customer    User    @relation(fields: [customer_id], references: [id])
+  customer    User    @relation("customer_quote", fields: [customer_id], references: [id])
   project     Project @relation(fields: [project_id], references: [id])
+
+  created_by String
+  creator    User   @relation("creator_quote", fields: [created_by], references: [id])
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

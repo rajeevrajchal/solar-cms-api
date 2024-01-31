@@ -60,6 +60,8 @@ const messages = {
   vendor_created: 'Vendor Created',
   vendor_updated: 'Vendor Updated',
   project_copied: 'Project Copied',
+
+  quote_create: 'Quote created',
 };
 
 export default messages;
