@@ -9,17 +9,17 @@ import {
   Post,
   Query,
   Res,
+  StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { InventoryService } from './inventory.service';
 import { Inventory } from '@prisma/client';
 import { InventoryInput } from './args/create.dto';
 import { InventoryResponse } from './res/response';
 import { QueryParamsDto } from './args/query-decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Readable } from 'stream';
+import { Response } from 'express';
 
 @Controller('inventory')
 export class InventoryController {
@@ -29,6 +29,14 @@ export class InventoryController {
   @HttpCode(HttpStatus.OK)
   async getAllInventory(@Query() query: QueryParamsDto): Promise<Inventory[]> {
     return this.inventoryService.all(query);
+  }
+
+  @Get('download')
+  @HttpCode(HttpStatus.OK)
+  async downloadCSV(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return this.inventoryService.download_csv(res);
   }
 
   @Get(':inventory_id')
@@ -54,22 +62,6 @@ export class InventoryController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<InventoryResponse> {
     return this.inventoryService.parse_csv(file);
-  }
-
-  @Get('download-csv')
-  @HttpCode(HttpStatus.OK)
-  async downloadCSV(@Res() res: Response): Promise<any> {
-    const data: any = this.inventoryService.download_csv();
-    const stream = new Readable();
-
-    stream.push(data.file);
-    stream.push(null);
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename=${data.filename}`,
-    );
-    return stream.pipe(res);
   }
 
   @Post('as-draft')
