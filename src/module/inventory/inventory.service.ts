@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { Inventory, InventoryStatus } from '@prisma/client';
@@ -8,12 +13,17 @@ import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from './args/query-decorators';
 import { CsvService } from 'src/helpers/csv.service';
 import { omit } from 'lodash';
+import { Response } from 'express';
+import { FileService } from 'src/helpers/file.service';
+
+const directoryPath = 'src/public/temporary-files';
 
 @Injectable()
 export class InventoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly csvParse: CsvService,
+    private readonly fileService: FileService,
   ) {}
 
   async all(query?: QueryParamsDto): Promise<Inventory[]> {
@@ -98,7 +108,7 @@ export class InventoryService {
     }
   }
 
-  async download_csv(): Promise<any> {
+  async download_csv(res: Response): Promise<StreamableFile> {
     try {
       const inventories = await this.prisma.inventory.findMany({
         where: {
@@ -122,17 +132,19 @@ export class InventoryService {
           vendor: true,
         },
       });
-      const file = await this.csvParse.jsonToCSV(
+      const data = await this.csvParse.jsonToCSV(
         inventories.map((item) => ({
           ...omit(item, ['vendor']),
           vendor: item?.vendor?.name,
         })),
       );
       const filename = `inventory-${new Date().toISOString()}.csv`;
-      return {
+      return this.fileService.streamAndDeleteFile(
+        directoryPath,
         filename,
-        file,
-      };
+        data,
+        res,
+      );
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
