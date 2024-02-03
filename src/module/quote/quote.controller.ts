@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -41,5 +42,15 @@ export class QuoteController {
     @CurrentUser() user: any,
   ): Promise<QuoteResponse> {
     return this.quoteService.storeQuote(input, user);
+  }
+
+  @Patch(':quote_id')
+  @HttpCode(HttpStatus.OK)
+  async updateQuote(
+    @Body() input: Partial<CreateQuoteInput>,
+    @CurrentUser() user: any,
+    @Param('quote_id') quote_id: string,
+  ): Promise<QuoteResponse> {
+    return this.quoteService.updateQuote(input, user, quote_id);
   }
 }

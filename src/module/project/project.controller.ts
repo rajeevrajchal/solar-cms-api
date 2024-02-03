@@ -37,6 +37,12 @@ export class ProjectController {
     return this.projectService.getAllProject(user.id, type);
   }
 
+  @Get('remain-for-quote')
+  @HttpCode(HttpStatus.OK)
+  async getProjectQuote(): Promise<Project[]> {
+    return this.projectService.getProjectForQuote();
+  }
+
   @Get(':project_id')
   async getSingleProject(
     @Param('project_id') project_id: string,

@@ -5,7 +5,7 @@ import messages from 'src/constants/message.constant';
 import { Project, ProjectStatus, Role, User } from '@prisma/client';
 import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectResponse } from './res/project-response';
-import { isEmpty, map, omit } from 'lodash';
+import { filter, isEmpty, map, omit } from 'lodash';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { MailService } from '../mail/mail.service';
 import { AssignUserInProject } from './args/assign_user.dto';
@@ -74,9 +74,40 @@ export class ProjectService {
         where: {
           deletedAt: null,
         },
-        include: this.projectAttribute,
+        include: {
+          ...this.projectAttribute,
+          quote: {
+            select: {
+              id: true,
+            },
+          },
+        },
       });
       return projects;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getProjectForQuote(): Promise<Project[]> {
+    try {
+      const projects = await this.prisma.project.findMany({
+        where: {
+          deletedAt: null,
+          status: ProjectStatus.CUSTOMER_INQUIRY,
+        },
+        include: {
+          ...this.projectAttribute,
+          quote: true,
+          equipment: {
+            select: {
+              quantity: true,
+              inventory: true,
+            },
+          },
+        },
+      });
+      return filter(projects, (item) => item.quote.length <= 0);
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -92,7 +123,8 @@ export class ProjectService {
           ...this.projectAttribute,
           children: true,
           equipment: {
-            include: {
+            select: {
+              quantity: true,
               inventory: true,
             },
           },
