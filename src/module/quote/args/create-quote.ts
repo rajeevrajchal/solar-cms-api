@@ -1,25 +1,25 @@
 import { IsNotEmpty, IsEmpty, IsString, IsNumber } from 'class-validator';
 
 export class CreateQuoteInput {
+  @IsNotEmpty()
+  @IsNumber()
+  installation_cost: number;
+
   @IsEmpty()
   @IsNumber()
   name: string;
 
   @IsEmpty()
   @IsNumber()
-  net_total: string;
+  net_total: number;
 
   @IsEmpty()
   @IsNumber()
-  installation_cost: string;
+  discount: number;
 
   @IsEmpty()
   @IsNumber()
-  discount: string;
-
-  @IsEmpty()
-  @IsNumber()
-  adjustment: string;
+  adjustment: number;
 
   @IsEmpty()
   @IsNumber()

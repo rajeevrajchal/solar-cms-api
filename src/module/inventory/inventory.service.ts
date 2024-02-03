@@ -87,7 +87,6 @@ export class InventoryService {
       const payload = rows.map((row) => ({
         ...omit(row, ['createdAt', 'updatedAt', 'status', '__parsed_extra']),
       }));
-      console.log('the payload', payload);
       await this.prisma.inventory.createMany({
         data: payload,
       });
