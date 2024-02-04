@@ -7,6 +7,8 @@ import {
   Param,
   Patch,
   Post,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { QuoteService } from './quote.service';
@@ -16,6 +18,7 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { QuoteResponse } from './res/quote-response';
 import { HasRoles } from 'src/decorators/role.decorator';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
+import { Response } from 'express';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER)
@@ -28,6 +31,14 @@ export class QuoteController {
   @HttpCode(HttpStatus.OK)
   async getAllProject(): Promise<Quote[]> {
     return this.quoteService.allQuote();
+  }
+
+  @Get('/download/:quote_id')
+  @HttpCode(HttpStatus.OK)
+  async downloadQuote(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return this.quoteService.downloadQuote(res);
   }
 
   @Get(':quote_id')

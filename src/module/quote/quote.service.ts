@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 import { SlugService } from 'src/helpers/slug-generator.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,7 +11,12 @@ import { Quote, QuoteStatus, User } from '@prisma/client';
 import messages from 'src/constants/message.constant';
 import { QuoteResponse } from './res/quote-response';
 import { CreateQuoteInput } from './args/create-quote';
-import { reduce } from 'lodash';
+import { last, reduce } from 'lodash';
+import { exec } from 'child_process';
+import { FileService } from 'src/helpers/file.service';
+import { Response } from 'express';
+import { promisify } from 'util';
+const execAsync = promisify(exec);
 
 @Injectable()
 export class QuoteService {
@@ -14,6 +24,7 @@ export class QuoteService {
     private readonly prisma: PrismaService,
     private readonly slugService: SlugService,
     private readonly mailService: MailService,
+    private readonly fileService: FileService,
   ) {}
 
   async allQuote(): Promise<Quote[]> {
@@ -77,6 +88,33 @@ export class QuoteService {
       });
       return quote;
     } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async downloadQuote(res: Response): Promise<StreamableFile> {
+    try {
+      const script = 'src/public/scripts/create-quote-document.py';
+      const { stdout, stderr } = await execAsync(
+        `python3 ${script} 'rajeev rajchal'`,
+      );
+
+      if (stderr) {
+        throw new HttpException(
+          messages.document_failed,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+
+      const filePath = stdout.trim();
+      const fileName = last(stdout.trim().split('/'));
+      return this.fileService.streamAndDeleteFileWithoutData(
+        filePath,
+        fileName,
+        res,
+      );
+    } catch (error) {
+      console.log('error', error);
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
