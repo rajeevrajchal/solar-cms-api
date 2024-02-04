@@ -29,10 +29,8 @@ export class FileService {
     return new Promise((resolve, reject) => {
       unlink(filePath, (err) => {
         if (err) {
-          console.log('has error', err);
           reject(err);
         } else {
-          console.log('success');
           resolve();
         }
       });
@@ -53,5 +51,23 @@ export class FileService {
       'Content-Disposition': `attachment; filename=${filename}`,
     });
     return new StreamableFile(file);
+  }
+
+  async streamAndDeleteFileWithoutData(
+    filePath: string,
+    filename: string,
+    res: Response,
+  ): Promise<StreamableFile> {
+    res.set({
+      'Content-Disposition': `attachment; filename=${filename}`,
+      'Content-Type': 'application/octet-stream', // Adjust content type based on your file type
+    });
+    const fileStream = createReadStream(filePath);
+    fileStream.pipe(res);
+    await new Promise((resolve) => {
+      fileStream.on('end', resolve);
+    });
+    await this.deleteFile(filePath);
+    return new StreamableFile(fileStream);
   }
 }

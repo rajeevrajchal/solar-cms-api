@@ -6,6 +6,7 @@ import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/middleware/guard/role.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from 'src/helpers/slug-generator.service';
+import { FileService } from 'src/helpers/file.service';
 
 @Module({
   controllers: [QuoteController],
@@ -16,6 +17,7 @@ import { SlugService } from 'src/helpers/slug-generator.service';
     RolesGuard,
     QuoteService,
     SlugService,
+    FileService,
   ],
 })
 export class QuoteModule {}
