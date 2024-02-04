@@ -36,9 +36,10 @@ export class QuoteController {
   @Get('/download/:quote_id')
   @HttpCode(HttpStatus.OK)
   async downloadQuote(
+    @Param('quote_id') quote_id: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return this.quoteService.downloadQuote(res);
+    return this.quoteService.downloadQuote(quote_id, res);
   }
 
   @Get(':quote_id')
