@@ -92,11 +92,17 @@ export class QuoteService {
     }
   }
 
-  async downloadQuote(res: Response): Promise<StreamableFile> {
+  async downloadQuote(
+    quote_id: string,
+    res: Response,
+  ): Promise<StreamableFile> {
     try {
+      const quote = await this.findQuote(quote_id);
+      const quoteJson = JSON.stringify(quote);
+
       const script = 'src/public/scripts/create-quote-document.py';
       const { stdout, stderr } = await execAsync(
-        `python3 ${script} 'rajeev rajchal'`,
+        `python3 ${script} '${quoteJson}'`,
       );
 
       if (stderr) {
@@ -106,6 +112,7 @@ export class QuoteService {
         );
       }
 
+      console.log(stdout);
       const filePath = stdout.trim();
       const fileName = last(stdout.trim().split('/'));
       return this.fileService.streamAndDeleteFileWithoutData(
@@ -114,7 +121,6 @@ export class QuoteService {
         res,
       );
     } catch (error) {
-      console.log('error', error);
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
