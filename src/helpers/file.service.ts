@@ -53,7 +53,6 @@ export class FileService {
     return new StreamableFile(file);
   }
 
-  // TODO: Uncomment delete file once use complete
   async streamAndDeleteFileWithoutData(
     filePath: string,
     filename: string,
@@ -69,7 +68,7 @@ export class FileService {
     await new Promise((resolve) => {
       fileStream.on('end', resolve);
     });
-    // await this.deleteFile(filePath);
+    await this.deleteFile(filePath);
     return new StreamableFile(fileStream);
   }
 }
