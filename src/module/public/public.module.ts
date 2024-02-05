@@ -7,6 +7,8 @@ import { UserCheckerService } from 'src/helpers/user-checker.service';
 import { SlugService } from 'src/helpers/slug-generator.service';
 import { MailService } from '../mail/mail.service';
 import { SolarService } from 'src/helpers/solar.service';
+import { QuoteService } from '../quote/quote.service';
+import { FileService } from 'src/helpers/file.service';
 
 @Module({
   controllers: [PublicController],
@@ -20,6 +22,8 @@ import { SolarService } from 'src/helpers/solar.service';
     SlugService,
     MailService,
     SolarService,
+    QuoteService,
+    FileService,
   ],
 })
 export class PublicModule {}
