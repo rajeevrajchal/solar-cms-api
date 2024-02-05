@@ -80,7 +80,6 @@ export class QuoteService {
                   type: true,
                 },
               },
-              quote: true,
               electric_load: true,
             },
           },
@@ -112,7 +111,6 @@ export class QuoteService {
         );
       }
 
-      console.log(stdout);
       const filePath = stdout.trim();
       const fileName = last(stdout.trim().split('/'));
       return this.fileService.streamAndDeleteFileWithoutData(
