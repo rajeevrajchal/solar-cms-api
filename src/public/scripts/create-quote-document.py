@@ -17,14 +17,31 @@ def create_quote_document(quote):
 
     inline_image = InlineImage(doc, image_path, width=Inches(4.0))
 
-
+    equipment_data = quote['project']['equipment']
+    for item in equipment_data:
+        item['total_cost'] = item['quantity'] * item['inventory']['selling_cost']
+        
     context = {
         'date': current_date,
+        'quote_sn': 123,
+        'equipment_data': equipment_data,
         "company_logo": inline_image,
         "company_name": "Solar CMS",
+        "company_email": "info@solarcms.io",
         "customer_name": quote['project']['customer']['name'],
         "customer_email": quote['project']['customer']['email'],
-        "customer_phone": quote['project']['customer']['phone'],
+        "project_name":quote['project']['name'],
+        "project_capacity":400,
+        "project_start_date":quote['project']['createdAt'],
+        "equipment_cost":quote['inventory_cost'],
+        "installation_cost":quote['installation_cost'],
+        "discount":quote['discount'],
+        "adjustment":quote['adjustment'],
+        "total":0,
+        "vat":quote['vat'],
+        "vat_amount":0,
+        "net_total": quote['net_total'],
+        "sale_user": "Rajeev Rajchal"
     }
     
     doc.render(context)
@@ -36,3 +53,4 @@ if __name__ == "__main__":
     quote = sys.argv[1]
     created_filename, created_full_path = create_quote_document(json.loads(quote))
     print(f'{created_full_path}')
+

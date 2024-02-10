@@ -80,6 +80,28 @@ export class QuoteService {
                   type: true,
                 },
               },
+              sale_user: {
+                select: {
+                  name: true,
+                  email: true,
+                  id: true,
+                  role: true,
+                  location: true,
+                  phone: true,
+                  type: true,
+                },
+              },
+              engineer: {
+                select: {
+                  name: true,
+                  email: true,
+                  id: true,
+                  role: true,
+                  location: true,
+                  phone: true,
+                  type: true,
+                },
+              },
               electric_load: true,
             },
           },
