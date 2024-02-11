@@ -31,7 +31,7 @@ export class InventoryController {
     return this.inventoryService.all(query);
   }
 
-  @Get('download')
+  @Get('download-csv')
   @HttpCode(HttpStatus.OK)
   async downloadCSV(
     @Res({ passthrough: true }) res: Response,
@@ -49,10 +49,12 @@ export class InventoryController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('product_image'))
   async createInventory(
     @Body() input: InventoryInput,
+    @UploadedFile() product_image: Express.Multer.File,
   ): Promise<InventoryResponse> {
-    return this.inventoryService.create(input);
+    return this.inventoryService.create(input, product_image);
   }
 
   @Post('parse-csv')
@@ -74,10 +76,12 @@ export class InventoryController {
 
   @Patch(':inventory_id')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('product_image'))
   async updateInventory(
     @Body() input: InventoryInput,
+    @UploadedFile() product_image: Express.Multer.File,
     @Param('inventory_id') inventory_id: string,
   ): Promise<InventoryResponse> {
-    return this.inventoryService.update(input, inventory_id);
+    return this.inventoryService.update(input, inventory_id, product_image);
   }
 }

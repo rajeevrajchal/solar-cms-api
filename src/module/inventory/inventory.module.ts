@@ -6,6 +6,7 @@ import { RolesGuard } from 'src/middleware/guard/role.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { CsvService } from 'src/helpers/csv.service';
 import { FileService } from 'src/helpers/file.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Module({
   controllers: [InventoryController],
@@ -16,6 +17,7 @@ import { FileService } from 'src/helpers/file.service';
     JwtAuthGuard,
     CsvService,
     FileService,
+    CloudinaryService,
   ],
 })
 export class InventoryModule {}

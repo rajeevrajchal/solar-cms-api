@@ -23,4 +23,12 @@ export class CloudinaryService {
       toStream(file.buffer).pipe(upload);
     });
   }
+
+  async deleteFile(fileId: string): Promise<any> {
+    await v2.uploader.destroy(fileId);
+  }
+
+  async getFile(fileId: string): Promise<any> {
+    await v2.api.resource(fileId);
+  }
 }
