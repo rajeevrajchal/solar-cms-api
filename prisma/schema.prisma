@@ -215,7 +215,7 @@ model Inventory {
 
   category      String
   nature        String?
-  product_image String?
+  product_image Json?
   description   String?
 
   watt    Float?

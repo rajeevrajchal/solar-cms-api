@@ -15,6 +15,7 @@ import { CsvService } from 'src/helpers/csv.service';
 import { omit } from 'lodash';
 import { Response } from 'express';
 import { FileService } from 'src/helpers/file.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 const directoryPath = 'src/public/temporary-files';
 
@@ -24,6 +25,7 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly csvParse: CsvService,
     private readonly fileService: FileService,
+    private readonly cloudinary: CloudinaryService,
   ) {}
 
   async all(query?: QueryParamsDto): Promise<Inventory[]> {
@@ -74,12 +76,42 @@ export class InventoryService {
     }
   }
 
-  async create(payload: InventoryInput): Promise<InventoryResponse> {
+  async create(
+    payload: InventoryInput,
+    product_image: any,
+  ): Promise<InventoryResponse> {
     try {
       const inventory = await this.prisma.inventory.create({
         data: {
           ...payload,
           status: InventoryStatus.ACTIVE,
+          watt: +payload.watt,
+          voltage: +payload.voltage,
+          ampere: +payload.ampere,
+          buying_cost: +payload.buying_cost,
+          selling_cost: +payload.selling_cost,
+          max_discount: +payload.max_discount,
+          max_flat_discount: +payload.max_flat_discount,
+        } as any,
+      });
+      let inventory_image = null;
+      const folder_name = `studio/inventory/${inventory.id}/`;
+      if (product_image) {
+        inventory_image = await this.cloudinary.uploadFile(
+          product_image,
+          folder_name,
+        );
+      }
+      await this.prisma.inventory.update({
+        where: {
+          id: inventory.id,
+        },
+        data: {
+          product_image:
+            {
+              url: inventory_image?.url,
+              id: inventory_image?.public_id,
+            } || null,
         } as any,
       });
       return {
@@ -95,7 +127,19 @@ export class InventoryService {
     try {
       const rows: any = await this.csvParse.parseCsv(csv);
       const payload = rows.map((row) => ({
-        ...omit(row, ['createdAt', 'updatedAt', 'status', '__parsed_extra']),
+        ...omit(
+          {
+            ...row,
+            watt: +row.watt,
+            voltage: +row.voltage,
+            ampere: +row.ampere,
+            buying_cost: +row.buying_cost,
+            selling_cost: +row.selling_cost,
+            max_discount: +row.max_discount,
+            max_flat_discount: +row.max_flat_discount,
+          },
+          ['createdAt', 'updatedAt', 'status', '__parsed_extra'],
+        ),
       }));
       await this.prisma.inventory.createMany({
         data: payload,
@@ -170,17 +214,61 @@ export class InventoryService {
   async update(
     payload: InventoryInput,
     inventory_id: string,
+    product_image: any,
   ): Promise<InventoryResponse> {
     try {
+      let inventory_image = null;
+      const folder_name = `studio/inventory/${inventory_id}/`;
+      if (product_image) {
+        const inventory_data: any =
+          await this.prisma.inventory.findFirstOrThrow({
+            where: {
+              id: inventory_id,
+            },
+          });
+        if (inventory_data.product_image) {
+          await this.cloudinary.deleteFile(inventory_data.product_image?.id);
+        }
+        inventory_image = await this.cloudinary.uploadFile(
+          product_image,
+          folder_name,
+        );
+      }
+
       const inventory = await this.prisma.inventory.update({
         where: {
           id: inventory_id,
         },
-        data: payload as any,
+        data: {
+          ...payload,
+          product_image:
+            {
+              url: inventory_image?.url,
+              id: inventory_image?.public_id,
+            } || null,
+          watt: +payload.watt,
+          voltage: +payload.voltage,
+          ampere: +payload.ampere,
+          buying_cost: +payload.buying_cost,
+          selling_cost: +payload.selling_cost,
+          max_discount: +payload.max_discount,
+          max_flat_discount: +payload.max_flat_discount,
+        } as any,
       });
+
       return {
         message: messages.inventory_created,
-        inventory,
+        inventory: inventory,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async removeImageFrom(): Promise<InventoryResponse> {
+    try {
+      return {
+        message: messages.image_removed,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);

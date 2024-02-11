@@ -15,7 +15,19 @@ export class CsvService {
         skipEmptyLines: true,
         skipLines: 1,
         complete: (parsedResults) => {
-          results.push(...parsedResults.data);
+          const trimmedResults = parsedResults.data.map((row) => {
+            const trimmedRow = {};
+            for (const key in row) {
+              if (row.hasOwnProperty(key)) {
+                const trimmedKey = key.trim();
+                const trimmedValue = String(row[key]).trim();
+                trimmedRow[trimmedKey] = trimmedValue;
+              }
+            }
+            return trimmedRow;
+          });
+
+          results.push(...trimmedResults);
           resolve(results);
         },
         error: (error) => {

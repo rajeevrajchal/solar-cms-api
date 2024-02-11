@@ -16,6 +16,7 @@ import { exec } from 'child_process';
 import { FileService } from 'src/helpers/file.service';
 import { Response } from 'express';
 import { promisify } from 'util';
+import { QueryParamsDto } from 'src/dto/query-decorators';
 const execAsync = promisify(exec);
 
 @Injectable()
@@ -27,12 +28,23 @@ export class QuoteService {
     private readonly fileService: FileService,
   ) {}
 
-  async allQuote(): Promise<Quote[]> {
+  async allQuote(query?: QueryParamsDto): Promise<Quote[]> {
     try {
+      const { search, status } = query;
+      const where: any = {
+        deletedAt: null,
+        status: status,
+      };
+
+      if (search) {
+        where.name = {
+          contains: search,
+          mode: 'insensitive',
+        };
+      }
+
       const quotes = await this.prisma.quote.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where,
         include: {
           customer: {
             select: {
@@ -247,7 +259,52 @@ export class QuoteService {
         quote: quote,
       };
     } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+
+  async approveQuote(quote_id: string): Promise<QuoteResponse> {
+    try {
+      await this.prisma.quote.update({
+        where: {
+          id: quote_id,
+        },
+        data: {
+          status: QuoteStatus.ACCEPTED,
+        },
+      });
+      return {
+        message: messages.quote_approved,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+  async deleteQuote(quote_id: string): Promise<QuoteResponse> {
+    try {
+      const quote = await this.prisma.quote.findUniqueOrThrow({
+        where: {
+          id: quote_id,
+        },
+      });
+      if (quote) {
+        await this.prisma.quote.update({
+          where: {
+            id: quote_id,
+          },
+          data: {
+            status: QuoteStatus.EXPIRED,
+            deletedAt: new Date(),
+          },
+        });
+
+        return {
+          message: messages.quote_approved,
+        };
+      }
+      throw new HttpException(messages.quote_not_found, HttpStatus.NOT_FOUND);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
 }

@@ -49,7 +49,6 @@ export class InventoryInput {
   @IsString()
   vendor_id: string;
 
-  @IsEmpty()
-  @IsString()
-  product_image: string;
+  // @IsEmpty()
+  // product_image: Express.Multer.File[];
 }

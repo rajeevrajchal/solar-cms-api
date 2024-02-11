@@ -43,13 +43,19 @@ export class FileService {
     data: any,
     res: Response,
   ): Promise<StreamableFile> {
+    res.set({
+      'Content-Disposition': `attachment; filename=${filename}`,
+      'Content-Type': 'application/octet-stream',
+      'Access-Control-Expose-Headers': 'Content-Disposition',
+    });
     const filePath = join(directoryPath, filename);
     await this.createFileFromData(filePath, data);
     const file = await createReadStream(filePath);
-    await this.deleteFile(filePath);
-    res.set({
-      'Content-Disposition': `attachment; filename=${filename}`,
+    file.pipe(res);
+    await new Promise((resolve) => {
+      file.on('end', resolve);
     });
+    await this.deleteFile(filePath);
     return new StreamableFile(file);
   }
 

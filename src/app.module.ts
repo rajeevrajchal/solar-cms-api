@@ -15,6 +15,7 @@ import { VendorModule } from './module/vendor/vendor.module';
 import { InventoryModule } from './module/inventory/inventory.module';
 import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
 import { QuoteModule } from './module/quote/quote.module';
+import { CloudinaryProvider } from './module/cloudinary/cloudinary.provider';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { QuoteModule } from './module/quote/quote.module';
   ],
   providers: [
     PrismaService,
+    CloudinaryProvider,
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

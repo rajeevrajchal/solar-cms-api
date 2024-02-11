@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
   // Res,
   // StreamableFile,
   UseGuards,
@@ -18,6 +20,7 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { QuoteResponse } from './res/quote-response';
 import { HasRoles } from 'src/decorators/role.decorator';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
+import { QueryParamsDto } from '../inventory/args/query-decorators';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER)
@@ -28,18 +31,9 @@ export class QuoteController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getAllProject(): Promise<Quote[]> {
-    return this.quoteService.allQuote();
+  async getAllProject(@Query() query: QueryParamsDto): Promise<Quote[]> {
+    return this.quoteService.allQuote(query);
   }
-
-  // @Get('/download/:quote_id')
-  // @HttpCode(HttpStatus.OK)
-  // async downloadQuote(
-  //   @Param('quote_id') quote_id: string,
-  //   @Res({ passthrough: true }) res: Response,
-  // ): Promise<StreamableFile> {
-  //   return this.quoteService.downloadQuote(quote_id, res);
-  // }
 
   @Get(':quote_id')
   async getSingleProject(@Param('quote_id') quote_id: string): Promise<Quote> {
@@ -63,5 +57,21 @@ export class QuoteController {
     @Param('quote_id') quote_id: string,
   ): Promise<QuoteResponse> {
     return this.quoteService.updateQuote(input, user, quote_id);
+  }
+
+  @Delete(':quote_id')
+  @HttpCode(HttpStatus.OK)
+  async deleteQuote(
+    @Param('quote_id') quote_id: string,
+  ): Promise<QuoteResponse> {
+    return this.quoteService.deleteQuote(quote_id);
+  }
+
+  @Patch('approve/:quote_id')
+  @HttpCode(HttpStatus.OK)
+  async approveQuote(
+    @Param('quote_id') quote_id: string,
+  ): Promise<QuoteResponse> {
+    return this.quoteService.approveQuote(quote_id);
   }
 }

@@ -62,6 +62,10 @@ const messages = {
   project_copied: 'Project Copied',
 
   quote_create: 'Quote created',
+  quote_approved: 'Quote Approved',
+  quote_not_found: 'Quote Not Found',
+
+  image_removed: 'Image Removed',
 };
 
 export default messages;
