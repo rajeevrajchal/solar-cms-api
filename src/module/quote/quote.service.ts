@@ -33,8 +33,8 @@ export class QuoteService {
       const { search, status } = query;
       const where: any = {
         deletedAt: null,
-        status: status,
-      };
+        status: status ? status.toUpperCase() : status,
+      } as any;
 
       if (search) {
         where.name = {
@@ -280,6 +280,25 @@ export class QuoteService {
       throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
+
+  async rejectQuote(quote_id: string): Promise<QuoteResponse> {
+    try {
+      await this.prisma.quote.update({
+        where: {
+          id: quote_id,
+        },
+        data: {
+          status: QuoteStatus.REJECTED,
+        },
+      });
+      return {
+        message: messages.quote_approved,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+
   async deleteQuote(quote_id: string): Promise<QuoteResponse> {
     try {
       const quote = await this.prisma.quote.findUniqueOrThrow({

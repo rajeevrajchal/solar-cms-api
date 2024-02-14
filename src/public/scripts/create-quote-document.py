@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import jinja2
 from datetime import datetime
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
@@ -10,6 +11,7 @@ def create_quote_document(quote):
     save_location = 'src/public/documents/'
     image_path = "src/public/images/logo.png"
     current_date = datetime.now().date()
+    formatted_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     filename = f"{quote['name'].replace(' ', '-')}-{current_date}.docx"
     full_path = save_location + filename
@@ -22,7 +24,7 @@ def create_quote_document(quote):
         item['total_cost'] = item['quantity'] * item['inventory']['selling_cost']
         
     context = {
-        'date': current_date,
+        'date': formatted_datetime,
         'quote_sn': 123,
         'equipment_data': equipment_data,
         "company_logo": inline_image,
@@ -32,7 +34,7 @@ def create_quote_document(quote):
         "customer_email": quote['project']['customer']['email'],
         "project_name":quote['project']['name'],
         "project_capacity":400,
-        "project_start_date":quote['project']['createdAt'],
+        "project_start_date":datetime.strptime(quote['project']['createdAt'], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S"),
         "equipment_cost":quote['inventory_cost'],
         "installation_cost":quote['installation_cost'],
         "discount":quote['discount'],
