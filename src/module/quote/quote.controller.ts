@@ -9,8 +9,6 @@ import {
   Patch,
   Post,
   Query,
-  // Res,
-  // StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { QuoteService } from './quote.service';
@@ -73,5 +71,13 @@ export class QuoteController {
     @Param('quote_id') quote_id: string,
   ): Promise<QuoteResponse> {
     return this.quoteService.approveQuote(quote_id);
+  }
+
+  @Patch('reject/:quote_id')
+  @HttpCode(HttpStatus.OK)
+  async rejectQuote(
+    @Param('quote_id') quote_id: string,
+  ): Promise<QuoteResponse> {
+    return this.quoteService.rejectQuote(quote_id);
   }
 }
