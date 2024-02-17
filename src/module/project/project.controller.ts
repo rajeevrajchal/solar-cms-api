@@ -24,6 +24,7 @@ import { AssignUserInProject } from './args/assign_user.dto';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectInsightInput } from './args/project_insight_input';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { QueryParamsDto } from 'src/dto/query-decorators';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER, Role.ADMIN)
@@ -35,9 +36,9 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   async getAllProject(
     @CurrentUser() user: Partial<User>,
-    @Query('type') type: string,
+    @Query() query: QueryParamsDto,
   ): Promise<Project[]> {
-    return this.projectService.getAllProject(user.id, type);
+    return this.projectService.all(user.id, query);
   }
 
   @Get('remain-for-quote')
