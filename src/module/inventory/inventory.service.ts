@@ -233,6 +233,7 @@ export class InventoryService {
           product_image,
           folder_name,
         );
+        console.log(inventory_image, 'inventory_image');
       }
 
       const inventory = await this.prisma.inventory.update({

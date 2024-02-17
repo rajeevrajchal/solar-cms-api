@@ -56,7 +56,7 @@ export class ProjectService {
   };
 
   async findProject(project_id): Promise<Project> {
-    return this.prisma.project.findFirstOrThrow({
+    return this.prisma.project.findUniqueOrThrow({
       where: {
         id: project_id,
       },
@@ -408,6 +408,7 @@ export class ProjectService {
           const payload = {
             model_url: inventory_image?.url,
             image_id: inventory_image?.public_id,
+            type: inventory_image?.format,
             project_id: project_id,
           } as any;
           await this.prisma.projectModel.create({
@@ -475,6 +476,22 @@ export class ProjectService {
       });
       return {
         message: messages.project_equipment,
+        project: {},
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async requestFillProjectLoad(project_id: string): Promise<ProjectResponse> {
+    try {
+      const isProjectExist: any = await this.findProject(project_id);
+      await this.mailService.sendProjectInfoToCustomer(
+        isProjectExist.customer,
+        isProjectExist,
+      );
+      return {
+        message: messages.project_link_sent,
         project: {},
       };
     } catch (error) {
