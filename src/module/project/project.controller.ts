@@ -9,7 +9,9 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { ProjectResponse } from './res/project-response';
@@ -21,6 +23,7 @@ import { Project, Role, User } from '@prisma/client';
 import { AssignUserInProject } from './args/assign_user.dto';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectInsightInput } from './args/project_insight_input';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER, Role.ADMIN)
@@ -59,15 +62,6 @@ export class ProjectController {
     return this.projectService.storeProject(project_input, user);
   }
 
-  @Patch(':project_id')
-  @HttpCode(HttpStatus.OK)
-  async updateProject(
-    @Body() project_input: Partial<UpdateProjectInput>,
-    @CurrentUser() user: any,
-  ): Promise<ProjectResponse> {
-    return this.projectService.updateProject(project_input, user);
-  }
-
   @Patch('copy/:project_id')
   @HttpCode(HttpStatus.OK)
   async copyProject(
@@ -99,6 +93,25 @@ export class ProjectController {
     @Param('project_id') project_id: string,
   ): Promise<ProjectResponse> {
     return this.projectService.updateProjectEquipment(input, project_id);
+  }
+
+  @Patch(':project_id/project-model')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateProjectModel(
+    @UploadedFiles() models: Array<Express.Multer.File>,
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.updateProjectModel(models, project_id);
+  }
+
+  @Patch(':project_id')
+  @HttpCode(HttpStatus.OK)
+  async updateProject(
+    @Body() project_input: Partial<UpdateProjectInput>,
+    @CurrentUser() user: any,
+  ): Promise<ProjectResponse> {
+    return this.projectService.updateProject(project_input, user);
   }
 
   @Delete(':project_id')

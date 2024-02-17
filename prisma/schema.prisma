@@ -133,7 +133,9 @@ model Project {
   location               String?
   mark_location_customer Boolean? @default(false)
 
-  actual_area Float?
+  estimated_area Float?
+  actual_area    Float?
+  capacity       Float?
 
   sun_hour_summer  Float?
   sun_hour_winter  Float?
@@ -178,8 +180,20 @@ model Project {
   equipment     Equipment[]
   electric_load ElectricLoad[]
   quote         Quote[]
+  model         ProjectModel[]
 
   @@map("project")
+}
+
+model ProjectModel {
+  id    String @id @unique @default(uuid())
+  model_url String
+  image_id String
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_id String
+
+  @@map("project_model")
 }
 
 model ProjectToTeam {

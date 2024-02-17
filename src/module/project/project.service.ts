@@ -12,6 +12,7 @@ import { AssignUserInProject } from './args/assign_user.dto';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { SolarService } from 'src/helpers/solar.service';
 import { ProjectInsightInput } from './args/project_insight_input';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProjectService {
@@ -21,6 +22,7 @@ export class ProjectService {
     private readonly slugService: SlugService,
     private readonly mailService: MailService,
     private readonly solarService: SolarService,
+    private readonly cloudinary: CloudinaryService,
   ) {}
 
   projectAttribute = {
@@ -129,6 +131,7 @@ export class ProjectService {
             },
           },
           quote: true,
+          model: true,
           electric_load: true,
         },
       });
@@ -381,6 +384,58 @@ export class ProjectService {
     }
   }
 
+  // function to create the model and also the connection
+  async updateProjectModel(
+    models: Array<Express.Multer.File>,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const isProjectExist = await this.findProject(project_id);
+      const folder_name = `studio/projects/${isProjectExist.id}/`;
+
+      if (isEmpty(isProjectExist)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      if (models.length > 0) {
+        await map(models, async (model) => {
+          const inventory_image = await this.cloudinary.uploadFile(
+            model,
+            folder_name,
+          );
+          const payload = {
+            model_url: inventory_image?.url,
+            image_id: inventory_image?.public_id,
+            project_id: project_id,
+          } as any;
+          await this.prisma.projectModel.create({
+            data: payload,
+          });
+        });
+        return {
+          message: messages.project_equipment,
+          project: {},
+        };
+      }
+      await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.CUSTOMER_INQUIRY,
+        },
+      });
+      return {
+        message: messages.project_equipment,
+        project: isProjectExist || {},
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateProjectEquipment(
     input: any,
     project_id: string,
@@ -415,7 +470,7 @@ export class ProjectService {
           id: project_id,
         },
         data: {
-          status: ProjectStatus.CUSTOMER_INQUIRY,
+          status: ProjectStatus.DESIGN_IN_PROGRESS,
         },
       });
       return {
