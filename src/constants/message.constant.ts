@@ -66,6 +66,7 @@ const messages = {
   quote_not_found: 'Quote Not Found',
 
   image_removed: 'Image Removed',
+  project_link_sent: 'Project link sent',
 };
 
 export default messages;

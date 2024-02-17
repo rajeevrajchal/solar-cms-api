@@ -114,6 +114,14 @@ export class ProjectController {
     return this.projectService.updateProject(project_input, user);
   }
 
+  @Post(':project_id/request-load')
+  @HttpCode(HttpStatus.OK)
+  async requestFillProjectLoad(
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.requestFillProjectLoad(project_id);
+  }
+
   @Delete(':project_id')
   @HttpCode(HttpStatus.OK)
   async deleteProject(

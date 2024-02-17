@@ -189,6 +189,7 @@ model ProjectModel {
   id    String @id @unique @default(uuid())
   model_url String
   image_id String
+  type String?
 
   project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
   project_id String
