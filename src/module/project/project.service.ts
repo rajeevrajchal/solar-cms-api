@@ -13,6 +13,7 @@ import { UpdateProjectInput } from './args/update_project.dto';
 import { SolarService } from 'src/helpers/solar.service';
 import { ProjectInsightInput } from './args/project_insight_input';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { QueryParamsDto } from 'src/dto/query-decorators';
 
 @Injectable()
 export class ProjectService {
@@ -66,16 +67,33 @@ export class ProjectService {
     });
   }
 
-  async getAllProject(user_id: string, query: string): Promise<Project[]> {
+  async all(user_id: string, query: QueryParamsDto): Promise<Project[]> {
     try {
-      console.log('the params', {
-        user_id,
-        query,
-      });
+      const { search, status, customer } = query;
+      const where: any = {
+        deletedAt: null,
+        status: status ? status.toUpperCase() : status,
+        customer_id: customer,
+        OR: [
+          { creator_id: user_id },
+          { engineer_id: user_id },
+          { sale_user_id: user_id },
+        ],
+      };
+
+      if (search) {
+        where.name = {
+          contains: search,
+          mode: 'insensitive',
+        };
+        where.customer.name = {
+          contains: search,
+          mode: 'insensitive',
+        };
+      }
+
       const projects = await this.prisma.project.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where,
         include: {
           ...this.projectAttribute,
           quote: {
@@ -415,19 +433,19 @@ export class ProjectService {
             data: payload,
           });
         });
+        await this.prisma.project.update({
+          where: {
+            id: project_id,
+          },
+          data: {
+            status: ProjectStatus.CUSTOMER_INQUIRY,
+          },
+        });
         return {
           message: messages.project_equipment,
-          project: {},
+          project: isProjectExist || {},
         };
       }
-      await this.prisma.project.update({
-        where: {
-          id: project_id,
-        },
-        data: {
-          status: ProjectStatus.CUSTOMER_INQUIRY,
-        },
-      });
       return {
         message: messages.project_equipment,
         project: isProjectExist || {},

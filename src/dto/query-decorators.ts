@@ -17,4 +17,8 @@ export class QueryParamsDto extends PaginationParamsDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  customer?: string;
 }
