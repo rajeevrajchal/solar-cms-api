@@ -9,6 +9,7 @@ import { MailService } from '../mail/mail.service';
 import { SolarService } from 'src/helpers/solar.service';
 import { QuoteService } from '../quote/quote.service';
 import { FileService } from 'src/helpers/file.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Module({
   controllers: [PublicController],
@@ -24,6 +25,7 @@ import { FileService } from 'src/helpers/file.service';
     SolarService,
     QuoteService,
     FileService,
+    CloudinaryService,
   ],
 })
 export class PublicModule {}
