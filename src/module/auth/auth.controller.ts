@@ -41,6 +41,18 @@ export class AuthController {
     return this.authService.refreshToken(user, body.refresh_token);
   }
 
+  @Post('forget-password')
+  async forget_password(@Body() input: { email: string }): Promise<any> {
+    return this.authService.forget_password(input.email);
+  }
+
+  @Post('forget-password-otp')
+  async forget_password_otp(
+    @Body() input: { email: string; otp: string },
+  ): Promise<any> {
+    return this.authService.forget_password_otp(input);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@CurrentUser() user: User): Promise<LogoutDto> {

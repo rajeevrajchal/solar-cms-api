@@ -25,6 +25,29 @@ export class MailService {
     });
   }
 
+  async sendOTP(user: { email: string; code: string; opt_expiry: string }) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'You OTP',
+      template: './opt_email',
+      context: {
+        code: user.code,
+        opt_expiry: user.opt_expiry,
+      },
+    });
+  }
+
+  async sendPasswordResetLink(user: { email: string; link: string }) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Reset Password',
+      template: './reset_password_email',
+      context: {
+        link: user.link,
+      },
+    });
+  }
+
   async sendProjectInfoToCustomer(
     user: Partial<User>,
     project: Partial<Project>,

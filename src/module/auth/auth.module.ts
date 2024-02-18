@@ -14,6 +14,8 @@ import { JwtStrategy } from 'src/middleware/strategy/jwt.strategy';
 import { PasswordHashService } from 'src/helpers/password-hash.service';
 import { LocalResetStrategy } from 'src/middleware/strategy/local-reset.gurad';
 import { JwtRefreshStrategy } from 'src/middleware/strategy/jwt-auth-refresh.strategy';
+import { MailService } from '../mail/mail.service';
+import { OtpService } from 'src/helpers/otp.service';
 
 @Module({
   imports: [
@@ -40,6 +42,9 @@ import { JwtRefreshStrategy } from 'src/middleware/strategy/jwt-auth-refresh.str
     JwtRefreshStrategy,
     LocalResetStrategy,
     PasswordHashService,
+    MailService,
+    ConfigService,
+    OtpService,
   ],
   controllers: [AuthController],
 })
