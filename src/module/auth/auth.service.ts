@@ -12,6 +12,10 @@ import messages from 'src/constants/message.constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { LogoutDto } from './dto/response/logout.response.dto';
+import { ConfigService } from '@nestjs/config';
+import { MailService } from '../mail/mail.service';
+import { OtpService } from 'src/helpers/otp.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +25,9 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly userChecker: UserCheckerService,
     private readonly hashPassword: PasswordHashService,
+    private readonly configService: ConfigService,
+    private readonly mail: MailService,
+    private readonly otp: OtpService,
   ) {}
 
   async login(req: any): Promise<any> {
@@ -137,6 +144,77 @@ export class AuthService {
 
       return {
         access_token,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
+  }
+
+  async forget_password(email: string): Promise<any> {
+    try {
+      const user = await this.prisma.user.findUniqueOrThrow({
+        where: {
+          email: email,
+        },
+      });
+      if (!user) throw new Error(messages.user_not_exist);
+      const otp: any = this.otp.generateOtp();
+      await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          otp: otp.code,
+          otp_expiry: otp.otp_expiry,
+        },
+      });
+      await this.mail.sendOTP({
+        email: user.email,
+        code: otp.code,
+        opt_expiry: moment(otp.opt_expiry).format('YYYY-MM-DD HH:mm:ss'),
+      });
+      return {
+        messages: messages.otp_sent,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
+  }
+
+  async forget_password_otp(input: {
+    email: string;
+    otp: string;
+  }): Promise<any> {
+    try {
+      const user = await this.prisma.user.findUniqueOrThrow({
+        where: {
+          email: input.email,
+        },
+      });
+      if (!user) throw new Error(messages.user_not_exist);
+
+      const isExpireOtp = this.otp.isOtpExpired(user?.otp_expiry);
+      if (input.otp !== user.otp || isExpireOtp) {
+        throw new Error(messages.unauthorized);
+      }
+
+      const tokenPayload = {
+        email: user?.email,
+        username: user?.email,
+        sub: user?.id,
+      };
+      const token = this.jwtService.sign(tokenPayload, {
+        expiresIn: '2h',
+      });
+      const link = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}`;
+      console.log('the linkis', link);
+      await this.mail.sendPasswordResetLink({
+        email: user.email,
+        link: link,
+      });
+      return {
+        messages: messages.password_reset_link_sent,
+        link: link,
       };
     } catch (error) {
       throw new UnauthorizedException(error);

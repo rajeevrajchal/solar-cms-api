@@ -67,6 +67,9 @@ const messages = {
 
   image_removed: 'Image Removed',
   project_link_sent: 'Project link sent',
+  user_not_exist: 'user not exist',
+  password_reset_link_sent: 'Password reset link sent',
+  otp_sent: 'Otp Sent',
 };
 
 export default messages;

@@ -61,7 +61,7 @@ model User {
   location String?
   phone    String?
 
-  otp           Float?
+  otp           String?
   refresh_token String?
   reset_token   String?
   is_active     Boolean @default(false)
