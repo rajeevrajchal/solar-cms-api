@@ -13,18 +13,18 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { Project, Role, User } from '@prisma/client';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { HasRoles } from 'src/decorators/role.decorator';
+import { QueryParamsDto } from 'src/dto/query-decorators';
+import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
+import { AssignUserInProject } from './args/assign_user.dto';
+import { CreateProjectInput } from './args/create_project.dto';
+import { ProjectInsightInput } from './args/project_insight_input';
+import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectService } from './project.service';
 import { ProjectResponse } from './res/project-response';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { CreateProjectInput } from './args/create_project.dto';
-import { HasRoles } from 'src/decorators/role.decorator';
-import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
-import { Project, Role, User } from '@prisma/client';
-import { AssignUserInProject } from './args/assign_user.dto';
-import { UpdateProjectInput } from './args/update_project.dto';
-import { ProjectInsightInput } from './args/project_insight_input';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { QueryParamsDto } from 'src/dto/query-decorators';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER, Role.ADMIN)

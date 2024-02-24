@@ -1,19 +1,19 @@
-import { SlugService } from './../../helpers/slug-generator.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import messages from 'src/constants/message.constant';
 import { Project, ProjectStatus, Role, User } from '@prisma/client';
-import { CreateProjectInput } from './args/create_project.dto';
-import { ProjectResponse } from './res/project-response';
 import { filter, isEmpty, map, omit } from 'lodash';
-import { UserCheckerService } from 'src/helpers/user-checker.service';
-import { MailService } from '../mail/mail.service';
-import { AssignUserInProject } from './args/assign_user.dto';
-import { UpdateProjectInput } from './args/update_project.dto';
-import { SolarService } from 'src/helpers/solar.service';
-import { ProjectInsightInput } from './args/project_insight_input';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
+import { SolarService } from 'src/helpers/solar.service';
+import { UserCheckerService } from 'src/helpers/user-checker.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { MailService } from '../mail/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SlugService } from './../../helpers/slug-generator.service';
+import { AssignUserInProject } from './args/assign_user.dto';
+import { CreateProjectInput } from './args/create_project.dto';
+import { ProjectInsightInput } from './args/project_insight_input';
+import { UpdateProjectInput } from './args/update_project.dto';
+import { ProjectResponse } from './res/project-response';
 
 @Injectable()
 export class ProjectService {
