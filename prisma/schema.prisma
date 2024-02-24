@@ -73,12 +73,13 @@ model User {
   updatedAt  DateTime  @default(now()) @updatedAt
 
   team           UserToTeam[]
-  project        Project[]    @relation("customer_project")
-  creator        Project[]    @relation("creator_project")
-  engineer       Project[]    @relation("engineer_project")
-  sale_user      Project[]    @relation("sale_user")
-  customer_quote Quote[]      @relation("customer_quote")
-  creator_quote  Quote[]      @relation("creator_quote")
+  project        Project[]         @relation("customer_project")
+  creator        Project[]         @relation("creator_project")
+  engineer       Project[]         @relation("engineer_project")
+  sale_user      Project[]         @relation("sale_user")
+  customer_quote Quote[]           @relation("customer_quote")
+  creator_quote  Quote[]           @relation("creator_quote")
+  services       CustomerService[] @relation("services")
 
   @@map("users")
 }
@@ -186,10 +187,10 @@ model Project {
 }
 
 model ProjectModel {
-  id    String @id @unique @default(uuid())
+  id        String  @id @unique @default(uuid())
   model_url String
-  image_id String
-  type String?
+  image_id  String
+  type      String?
 
   project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
   project_id String
@@ -296,9 +297,56 @@ model Quote {
   created_by String
   creator    User   @relation("creator_quote", fields: [created_by], references: [id])
 
+  order_id String?
+  order    Order?  @relation(fields: [order_id], references: [id])
+
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
   @@map("quote")
+}
+
+model Order {
+  id   String @id @unique @default(uuid())
+  name String
+
+  quote Quote[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("order")
+}
+
+model Service {
+  id          String  @id @unique @default(uuid())
+  name        String
+  amount      Float
+  description String?
+
+  customer CustomerService[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("service")
+}
+
+model CustomerService {
+  id String @id @unique @default(uuid())
+
+  customer_id String
+  customer    User   @relation("services", fields: [customer_id], references: [id], onDelete: Cascade)
+
+  service_id String
+  service    Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("customer_service")
 }
