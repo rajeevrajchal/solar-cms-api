@@ -16,6 +16,8 @@ import { InventoryModule } from './module/inventory/inventory.module';
 import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
 import { QuoteModule } from './module/quote/quote.module';
 import { CloudinaryProvider } from './module/cloudinary/cloudinary.provider';
+import { ServiceModule } from './module/service/service.module';
+import { OrderModule } from './module/order/order.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { CloudinaryProvider } from './module/cloudinary/cloudinary.provider';
     InventoryModule,
     CloudinaryModule,
     QuoteModule,
+    ServiceModule,
+    OrderModule,
   ],
   providers: [
     PrismaService,
