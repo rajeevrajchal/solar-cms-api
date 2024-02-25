@@ -11,20 +11,19 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { QuoteService } from './quote.service';
 import { Quote, Role } from '@prisma/client';
-import { CreateQuoteInput } from './args/create-quote';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { QuoteResponse } from './res/quote-response';
 import { HasRoles } from 'src/decorators/role.decorator';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
 import { QueryParamsDto } from '../inventory/args/query-decorators';
+import { CreateQuoteInput } from './args/create-quote';
+import { QuoteService } from './quote.service';
+import { QuoteResponse } from './res/quote-response';
 
 @UseGuards(JwtAndRolesGuard)
 @HasRoles(Role.SALE, Role.ENGINEER)
 @Controller('quote')
 export class QuoteController {
-  quote: any;
   constructor(private readonly quoteService: QuoteService) {}
 
   @Get()

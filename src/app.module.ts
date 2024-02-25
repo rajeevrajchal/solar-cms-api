@@ -1,23 +1,24 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 
-import { PrismaService } from './module/prisma/prisma.service';
-import { UserModule } from './module/user/user.module';
-import { AuthModule } from './module/auth/auth.module';
-import { MailModule } from './module/mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './exception/exception';
+import { AuthModule } from './module/auth/auth.module';
+import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
+import { CloudinaryProvider } from './module/cloudinary/cloudinary.provider';
 import { CustomerModule } from './module/customer/customer.module';
+import { HomeModule } from './module/home/home.module';
+import { InventoryModule } from './module/inventory/inventory.module';
+import { MailModule } from './module/mail/mail.module';
+import { OrderModule } from './module/order/order.module';
+import { PrismaService } from './module/prisma/prisma.service';
 import { ProjectModule } from './module/project/project.module';
 import { PublicModule } from './module/public/public.module';
-import { VendorModule } from './module/vendor/vendor.module';
-import { InventoryModule } from './module/inventory/inventory.module';
-import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
 import { QuoteModule } from './module/quote/quote.module';
-import { CloudinaryProvider } from './module/cloudinary/cloudinary.provider';
 import { ServiceModule } from './module/service/service.module';
-import { OrderModule } from './module/order/order.module';
+import { UserModule } from './module/user/user.module';
+import { VendorModule } from './module/vendor/vendor.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { OrderModule } from './module/order/order.module';
     QuoteModule,
     ServiceModule,
     OrderModule,
+    HomeModule,
   ],
   providers: [
     PrismaService,
