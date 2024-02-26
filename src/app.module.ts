@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AllExceptionsFilter } from './exception/exception';
 import { AuthModule } from './module/auth/auth.module';
 import { CloudinaryModule } from './module/cloudinary/cloudinary.module';
@@ -25,6 +26,12 @@ import { VendorModule } from './module/vendor/vendor.module';
     ConfigModule.forRoot({
       isGlobal: true, // no need to import into other modules
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     MulterModule.register(),
     UserModule,
     AuthModule,
@@ -46,6 +53,10 @@ import { VendorModule } from './module/vendor/vendor.module';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
