@@ -20,10 +20,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: any) {
-    console.log('the payload', {
-      payload,
-      email: payload.email,
-    });
     const user = await this.userCheckService.checkUserExist(payload.email);
     if (user.is_temp && user.role !== Role.CUSTOMER) {
       throw new UnauthorizedException({

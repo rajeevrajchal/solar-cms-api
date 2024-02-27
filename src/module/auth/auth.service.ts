@@ -206,7 +206,6 @@ export class AuthService {
         expiresIn: '2h',
       });
       const link = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}`;
-      console.log('the linkis', link);
       await this.mail.sendPasswordResetLink({
         email: user.email,
         link: link,
