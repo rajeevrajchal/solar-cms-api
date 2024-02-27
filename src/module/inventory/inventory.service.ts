@@ -5,17 +5,17 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 
-import { PrismaService } from '../prisma/prisma.service';
 import { Inventory, InventoryStatus } from '@prisma/client';
-import { InventoryInput } from './args/create.dto';
-import { InventoryResponse } from './res/response';
-import messages from 'src/constants/message.constant';
-import { QueryParamsDto } from './args/query-decorators';
-import { CsvService } from 'src/helpers/csv.service';
-import { omit } from 'lodash';
 import { Response } from 'express';
+import { omit } from 'lodash';
+import messages from 'src/constants/message.constant';
+import { CsvService } from 'src/helpers/csv.service';
 import { FileService } from 'src/helpers/file.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { InventoryInput } from './args/create.dto';
+import { QueryParamsDto } from './args/query-decorators';
+import { InventoryResponse } from './res/response';
 
 const directoryPath = 'src/public/temporary-files';
 
@@ -233,7 +233,6 @@ export class InventoryService {
           product_image,
           folder_name,
         );
-        console.log(inventory_image, 'inventory_image');
       }
 
       const inventory = await this.prisma.inventory.update({
