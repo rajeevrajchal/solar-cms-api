@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserCheckerService } from 'src/helpers/user-checker.service';
-import messages from 'src/constants/message.constant';
+import { PassportStrategy } from '@nestjs/passport';
 import { Role } from '@prisma/client';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import messages from 'src/constants/message.constant';
+import { UserCheckerService } from 'src/helpers/user-checker.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -20,6 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: any) {
+    console.log('the payload', {
+      payload,
+      email: payload.email,
+    });
     const user = await this.userCheckService.checkUserExist(payload.email);
     if (user.is_temp && user.role !== Role.CUSTOMER) {
       throw new UnauthorizedException({

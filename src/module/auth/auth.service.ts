@@ -1,5 +1,3 @@
-import { UserCheckerService } from './../../helpers/user-checker.service';
-import { PasswordHashService } from 'src/helpers/password-hash.service';
 import {
   ForbiddenException,
   HttpException,
@@ -7,15 +5,17 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import messages from 'src/constants/message.constant';
-import { PrismaService } from '../prisma/prisma.service';
-import { User } from '@prisma/client';
-import { LogoutDto } from './dto/response/logout.response.dto';
 import { ConfigService } from '@nestjs/config';
-import { MailService } from '../mail/mail.service';
-import { OtpService } from 'src/helpers/otp.service';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import * as moment from 'moment';
+import messages from 'src/constants/message.constant';
+import { OtpService } from 'src/helpers/otp.service';
+import { PasswordHashService } from 'src/helpers/password-hash.service';
+import { MailService } from '../mail/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserCheckerService } from './../../helpers/user-checker.service';
+import { LogoutDto } from './dto/response/logout.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -86,9 +86,8 @@ export class AuthService {
     };
   }
 
-  async reset_password(req: any): Promise<any> {
+  async reset_password(user: User, password: string): Promise<any> {
     try {
-      const { user, password } = req?.user;
       const hashPassword = await this.passwordHashService.hashData(password);
       await this.prisma.user.update({
         where: {
