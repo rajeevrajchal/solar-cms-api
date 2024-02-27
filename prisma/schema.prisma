@@ -320,21 +320,6 @@ model Order {
   @@map("order")
 }
 
-model Service {
-  id          String  @id @unique @default(uuid())
-  name        String
-  amount      Float
-  description String?
-
-  service_configuration CustomerServicePivot[] @relation("service_configuration")
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-
-  @@map("service")
-}
-
 model CustomerService {
   id     String      @id @unique @default(uuid())
   status QuoteStatus
@@ -343,22 +328,27 @@ model CustomerService {
   customer_id String
   customer    User   @relation("services", fields: [customer_id], references: [id], onDelete: Cascade)
 
-  customer_service_configuration CustomerServicePivot[] @relation("customer_service_configuration")
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  service   Service[]
+
+  @@map("customer_service")
+}
+
+model Service {
+  id          String  @id @unique @default(uuid())
+  name        String
+  amount      Float
+  description String?
+  info        Json?
+
+  customer_service_id String
+  customer_service    CustomerService? @relation(fields: [customer_service_id], references: [id])
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
-  @@map("customer_service")
-}
-
-model CustomerServicePivot {
-  customer_service_id            String
-  customer_service_configuration CustomerService @relation("customer_service_configuration", fields: [customer_service_id], references: [id], onDelete: Cascade)
-
-  service_id            String
-  service_configuration Service @relation("service_configuration", fields: [service_id], references: [id], onDelete: Cascade)
-
-  @@id([service_id, customer_service_id])
-  @@map("customer_service_pivot")
+  @@map("service")
 }

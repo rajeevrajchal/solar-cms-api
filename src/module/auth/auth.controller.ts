@@ -1,21 +1,20 @@
 import {
+  Body,
   Controller,
-  Post,
   HttpCode,
   HttpStatus,
-  UseGuards,
+  Post,
   Req,
-  Body,
+  UseGuards,
 } from '@nestjs/common';
 
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from 'src/middleware/guard/local-auth.guard';
-import { LocalResetGuard } from 'src/middleware/guard/local-reset.guard';
-import { JwtAuthRefreshGuard } from 'src/middleware/guard/jwt-auth-refresh.guard';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
-import { LogoutDto } from './dto/response/logout.response.dto';
 import { User } from '@prisma/client';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { JwtAuthRefreshGuard } from 'src/middleware/guard/jwt-auth-refresh.guard';
+import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
+import { LocalAuthGuard } from 'src/middleware/guard/local-auth.guard';
+import { AuthService } from './auth.service';
+import { LogoutDto } from './dto/response/logout.response.dto';
 
 @Controller()
 export class AuthController {
@@ -30,9 +29,15 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('reset-password')
-  @UseGuards(LocalResetGuard)
-  reset_password(@Req() req): Promise<any> {
-    return this.authService.reset_password(req);
+  @UseGuards(JwtAuthGuard)
+  reset_password(
+    @Req() req,
+    @Body()
+    input: {
+      password: string;
+    },
+  ): Promise<any> {
+    return this.authService.reset_password(req.user, input.password);
   }
 
   @UseGuards(JwtAuthRefreshGuard)
