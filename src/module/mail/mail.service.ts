@@ -1,7 +1,7 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { Project, User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { Project, User } from '@prisma/client';
 
 @Injectable()
 export class MailService {
@@ -66,6 +66,20 @@ export class MailService {
         project: project,
         project_electric_load_url: projectElectricLoadUrl,
       },
+    });
+  }
+
+  async sendNewQuote(quote: any, attachment: any) {
+    await this.mailerService.sendMail({
+      to: quote.customer.email,
+      subject: 'Project Quote',
+      template: './new_quote',
+      context: {
+        company_name: this.configService.get<string>('COMPANY_NAME'),
+        clientName: quote.customer.name || quote.customer.email,
+        projectName: quote.project.name,
+      },
+      attachments: attachment,
     });
   }
 }
