@@ -64,6 +64,12 @@ export class QuoteController {
     return this.quoteService.deleteQuote(quote_id);
   }
 
+  @Post('mail/:quote_id')
+  @HttpCode(HttpStatus.OK)
+  async sendQuote(@Param('quote_id') quote_id: string): Promise<QuoteResponse> {
+    return this.quoteService.sendQuote(quote_id);
+  }
+
   @Patch('approve/:quote_id')
   @HttpCode(HttpStatus.OK)
   async approveQuote(

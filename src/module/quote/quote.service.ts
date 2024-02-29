@@ -4,19 +4,19 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
+import { Quote, QuoteStatus, User } from '@prisma/client';
+import { exec } from 'child_process';
+import { Response } from 'express';
+import { last, reduce } from 'lodash';
+import messages from 'src/constants/message.constant';
+import { QueryParamsDto } from 'src/dto/query-decorators';
+import { FileService } from 'src/helpers/file.service';
 import { SlugService } from 'src/helpers/slug-generator.service';
+import { promisify } from 'util';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { Quote, QuoteStatus, User } from '@prisma/client';
-import messages from 'src/constants/message.constant';
-import { QuoteResponse } from './res/quote-response';
 import { CreateQuoteInput } from './args/create-quote';
-import { last, reduce } from 'lodash';
-import { exec } from 'child_process';
-import { FileService } from 'src/helpers/file.service';
-import { Response } from 'express';
-import { promisify } from 'util';
-import { QueryParamsDto } from 'src/dto/query-decorators';
+import { QuoteResponse } from './res/quote-response';
 const execAsync = promisify(exec);
 
 @Injectable()
@@ -293,6 +293,50 @@ export class QuoteService {
       });
       return {
         message: messages.quote_approved,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+
+  async sendQuote(quote_id: string): Promise<QuoteResponse> {
+    try {
+      const quote: any = await this.findQuote(quote_id);
+      const quoteJson = JSON.stringify(quote);
+
+      const script = 'src/public/scripts/create-quote-document.py';
+      const { stdout, stderr } = await execAsync(
+        `python3 ${script} '${quoteJson}'`,
+      );
+
+      if (stderr) {
+        throw new HttpException(
+          messages.document_failed,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+      const filePath = stdout.trim();
+      const fileName = last(stdout.trim().split('/'));
+      await this.mailService.sendNewQuote(
+        {
+          customer: {
+            name: quote.project.customer.name,
+            email: quote.project.customer.email,
+          },
+          project: {
+            name: quote.project.name,
+          },
+        },
+        [
+          {
+            filename: fileName,
+            path: filePath,
+          },
+        ],
+      );
+      await this.fileService.deleteFile(filePath);
+      return {
+        message: messages.quote_sent,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);
