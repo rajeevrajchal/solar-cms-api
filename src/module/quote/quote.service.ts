@@ -252,7 +252,7 @@ export class QuoteService {
         where: {
           id: quote_id,
         },
-        data: params,
+        data: { ...params, status: QuoteStatus.SENT },
       });
       return {
         message: messages.quote_create,
