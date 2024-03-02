@@ -44,11 +44,17 @@ enum InventoryStatus {
 }
 
 enum QuoteStatus {
-  DRAFT
+  PENDING
   SENT
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+enum OrderStatus {
+  ORDERED
+  CANCLED
+  PENDING
 }
 
 model User {
@@ -287,7 +293,7 @@ model Quote {
   adjustment        Float?      @default(0)
   vat               Float?      @default(0)
   verification_file String?
-  status            QuoteStatus @default(DRAFT)
+  status            QuoteStatus @default(PENDING)
 
   project_id  String
   customer_id String
@@ -297,8 +303,7 @@ model Quote {
   created_by String
   creator    User   @relation("creator_quote", fields: [created_by], references: [id])
 
-  order_id String?
-  order    Order?  @relation(fields: [order_id], references: [id])
+  order Order[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -308,10 +313,13 @@ model Quote {
 }
 
 model Order {
-  id   String @id @unique @default(uuid())
-  name String
+  id      String      @id @unique @default(uuid())
+  name    String?
+  payment String?
+  status  OrderStatus @default(PENDING)
 
-  quote Quote[]
+  quote_id String?
+  quote    Quote?  @relation(fields: [quote_id], references: [id])
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

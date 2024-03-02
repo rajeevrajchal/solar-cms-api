@@ -4,7 +4,7 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
-import { Quote, QuoteStatus, User } from '@prisma/client';
+import { OrderStatus, Quote, QuoteStatus, User } from '@prisma/client';
 import { exec } from 'child_process';
 import { Response } from 'express';
 import { last, reduce } from 'lodash';
@@ -15,6 +15,7 @@ import { SlugService } from 'src/helpers/slug-generator.service';
 import { promisify } from 'util';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ApproveQuote } from './args/approve-quote';
 import { CreateQuoteInput } from './args/create-quote';
 import { QuoteResponse } from './res/quote-response';
 const execAsync = promisify(exec);
@@ -263,9 +264,13 @@ export class QuoteService {
     }
   }
 
-  async approveQuote(quote_id: string): Promise<QuoteResponse> {
+  async approveQuote(
+    quote_id: string,
+    payload?: ApproveQuote,
+  ): Promise<QuoteResponse> {
     try {
-      await this.prisma.quote.update({
+      console.log('the pyaload', payload);
+      const quote = await this.prisma.quote.update({
         where: {
           id: quote_id,
         },
@@ -273,6 +278,17 @@ export class QuoteService {
           status: QuoteStatus.ACCEPTED,
         },
       });
+      console.log('the quote is', quote);
+      await this.prisma.order.create({
+        data: {
+          name: 'SS-Order-1',
+          payment: payload.payment,
+          status: OrderStatus.ORDERED,
+          quote_id: quote_id,
+        },
+      });
+      // await this.mailService.sendQuoteOrdered({});
+
       return {
         message: messages.quote_approved,
       };
