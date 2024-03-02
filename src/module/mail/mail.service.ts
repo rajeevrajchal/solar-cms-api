@@ -69,6 +69,7 @@ export class MailService {
     });
   }
 
+  // when quote is created and sent
   async sendNewQuote(quote: any, attachment: any) {
     await this.mailerService.sendMail({
       to: quote.customer.email,
@@ -77,6 +78,21 @@ export class MailService {
       context: {
         company_name: this.configService.get<string>('COMPANY_NAME'),
         clientName: quote.customer.name || quote.customer.email,
+        projectName: quote.project.name,
+      },
+      attachments: attachment,
+    });
+  }
+
+  // when order is placed
+  async sendQuoteOrdered(quote: any, attachment: any) {
+    await this.mailerService.sendMail({
+      to: quote.customer.email,
+      subject: 'Your order information',
+      template: './quote_ordered',
+      context: {
+        company_name: this.configService.get<string>('COMPANY_NAME'),
+        customerName: quote.customer.name || quote.customer.email,
         projectName: quote.project.name,
       },
       attachments: attachment,

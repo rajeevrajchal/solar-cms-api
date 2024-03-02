@@ -1,17 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CustomerService, Service } from '@prisma/client';
 import { QueryParamsDto } from 'src/dto/query-decorators';
-import { FileService } from 'src/helpers/file.service';
-import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ServiceService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly mailService: MailService,
-    private readonly fileService: FileService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async all(query?: QueryParamsDto): Promise<Service[]> {
     try {
@@ -30,15 +24,6 @@ export class ServiceService {
 
       const service = await this.prisma.service.findMany({
         where,
-        select: {
-          id: true,
-          name: true,
-          amount: true,
-          description: true,
-          deletedAt: true,
-          createdAt: true,
-          updatedAt: true,
-        },
       });
       return service;
     } catch (error) {
@@ -65,17 +50,6 @@ export class ServiceService {
               location: true,
               phone: true,
               type: true,
-            },
-          },
-          customer_service_configuration: {
-            select: {
-              service_configuration: {
-                select: {
-                  name: true,
-                  amount: true,
-                  description: true,
-                },
-              },
             },
           },
         },

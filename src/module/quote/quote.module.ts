@@ -1,14 +1,16 @@
-import { Module } from '@nestjs/common';
-import { QuoteController } from './quote.controller';
-import { QuoteService } from './quote.service';
-import { MailService } from '../mail/mail.service';
+import { Module, forwardRef } from '@nestjs/common';
+import { FileService } from 'src/helpers/file.service';
+import { SlugService } from 'src/helpers/slug-generator.service';
 import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/middleware/guard/role.guard';
+import { MailService } from '../mail/mail.service';
+import { OrderModule } from '../order/order.module';
 import { PrismaService } from '../prisma/prisma.service';
-import { SlugService } from 'src/helpers/slug-generator.service';
-import { FileService } from 'src/helpers/file.service';
+import { QuoteController } from './quote.controller';
+import { QuoteService } from './quote.service';
 
 @Module({
+  imports: [forwardRef(() => OrderModule)],
   controllers: [QuoteController],
   providers: [
     MailService,
@@ -19,5 +21,6 @@ import { FileService } from 'src/helpers/file.service';
     SlugService,
     FileService,
   ],
+  exports: [QuoteService],
 })
 export class QuoteModule {}
