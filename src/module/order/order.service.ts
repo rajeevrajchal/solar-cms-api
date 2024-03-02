@@ -28,6 +28,9 @@ export class OrderService {
 
       return await this.prisma.order.findMany({
         where,
+        include: {
+          quote: true,
+        },
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
