@@ -53,7 +53,7 @@ enum QuoteStatus {
 
 enum OrderStatus {
   ORDERED
-  CANCLED
+  CANALED
   PENDING
 }
 
