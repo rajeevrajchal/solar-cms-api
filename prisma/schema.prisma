@@ -315,10 +315,12 @@ model Quote {
 }
 
 model Order {
-  id      String      @id @unique @default(uuid())
-  name    String?
-  payment String?
-  status  OrderStatus @default(PENDING)
+  id           String      @id @unique @default(uuid())
+  name         String?
+  reason       String?
+  payment      Float?
+  full_payment Boolean     @default(false)
+  status       OrderStatus @default(PENDING)
 
   quote_id String?
   quote    Quote?  @relation(fields: [quote_id], references: [id])

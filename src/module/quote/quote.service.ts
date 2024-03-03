@@ -4,6 +4,7 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OrderStatus, Quote, QuoteStatus, User } from '@prisma/client';
 import { exec } from 'child_process';
 import { Response } from 'express';
@@ -27,6 +28,7 @@ export class QuoteService {
     private readonly slugService: SlugService,
     private readonly mailService: MailService,
     private readonly fileService: FileService,
+    private configService: ConfigService,
   ) {}
 
   async allQuote(query?: QueryParamsDto): Promise<Quote[]> {
@@ -234,7 +236,7 @@ export class QuoteService {
       const quote = await this.prisma.quote.create({
         data: {
           ...params,
-          status: QuoteStatus.SENT,
+          status: QuoteStatus.PENDING,
         },
       });
       return {
@@ -273,7 +275,6 @@ export class QuoteService {
     payload?: ApproveQuote,
   ): Promise<QuoteResponse> {
     try {
-      console.log('the pyaload', payload);
       const quote = await this.prisma.quote.update({
         where: {
           id: quote_id,
@@ -282,11 +283,14 @@ export class QuoteService {
           status: QuoteStatus.ACCEPTED,
         },
       });
-      console.log('the quote is', quote);
+      const orderName = this.slugService.generateSlugForQuote(
+        `${this.configService.get<string>('COMPANY_NAME')}-${quote.name} `,
+      );
       await this.prisma.order.create({
         data: {
-          name: 'SS-Order-1',
-          payment: payload.payment,
+          name: payload?.name || orderName,
+          full_payment: payload.full_payment,
+          payment: +payload.full_payment ? 100 : +payload.payment,
           status: OrderStatus.ORDERED,
           quote_id: quote_id,
         },

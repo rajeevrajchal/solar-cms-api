@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FileService } from 'src/helpers/file.service';
 import { SlugService } from 'src/helpers/slug-generator.service';
 import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
@@ -20,6 +21,7 @@ import { QuoteService } from './quote.service';
     QuoteService,
     SlugService,
     FileService,
+    ConfigService,
   ],
   exports: [QuoteService],
 })
