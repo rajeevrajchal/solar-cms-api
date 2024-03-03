@@ -34,7 +34,11 @@ export class QuoteService {
       const { search, status } = query;
       const where: any = {
         deletedAt: null,
-        status: status ? status.toUpperCase() : status,
+        status: status
+          ? status.toUpperCase()
+          : {
+              not: QuoteStatus.ACCEPTED,
+            },
       } as any;
 
       if (search) {

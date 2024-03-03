@@ -55,6 +55,8 @@ enum OrderStatus {
   ORDERED
   CANALED
   PENDING
+  ON_HOLD
+  PAYMENT_DONE
 }
 
 model User {
