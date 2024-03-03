@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
-import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['error', 'warn'],
+    logger: ['error', 'warn', 'log'],
     rawBody: true,
   });
 
