@@ -71,6 +71,7 @@ const messages = {
   password_reset_link_sent: 'Password reset link sent',
   otp_sent: 'Otp Sent',
   quote_sent: 'Quote Sent',
+  quote_shared: 'Quote Shared',
 };
 
 export default messages;
