@@ -72,6 +72,7 @@ const messages = {
   otp_sent: 'Otp Sent',
   quote_sent: 'Quote Sent',
   quote_shared: 'Quote Shared',
+  project_status_changed: 'Project Status Changed',
 };
 
 export default messages;

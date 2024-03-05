@@ -5,7 +5,13 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OrderStatus, Quote, QuoteStatus, User } from '@prisma/client';
+import {
+  OrderStatus,
+  ProjectStatus,
+  Quote,
+  QuoteStatus,
+  User,
+} from '@prisma/client';
 import { exec } from 'child_process';
 import { Response } from 'express';
 import { last, reduce } from 'lodash';
@@ -275,7 +281,8 @@ export class QuoteService {
     payload?: ApproveQuote,
   ): Promise<QuoteResponse> {
     try {
-      const quote = await this.prisma.quote.update({
+      const quote: any = await this.findQuote(quote_id);
+      await this.prisma.quote.update({
         where: {
           id: quote_id,
         },
@@ -295,7 +302,46 @@ export class QuoteService {
           quote_id: quote_id,
         },
       });
-      // await this.mailService.sendQuoteOrdered({});
+      await this.prisma.project.update({
+        where: {
+          id: quote.project_id,
+        },
+        data: {
+          status: ProjectStatus.CUSTOMER_READY,
+        },
+      });
+      const quoteJson = JSON.stringify(quote);
+      const script = 'src/public/scripts/create-quote-document.py';
+      const { stdout, stderr } = await execAsync(
+        `python3 ${script} '${quoteJson}'`,
+      );
+
+      if (stderr) {
+        throw new HttpException(
+          messages.document_failed,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+      const filePath = stdout.trim();
+      const fileName = last(stdout.trim().split('/'));
+
+      await this.mailService.sendQuoteOrdered(
+        {
+          customer: {
+            name: quote.project.customer.name,
+            email: quote.project.customer.email,
+          },
+          project: {
+            name: quote.project.name,
+          },
+        },
+        [
+          {
+            filename: fileName,
+            path: filePath,
+          },
+        ],
+      );
 
       return {
         message: messages.quote_approved,

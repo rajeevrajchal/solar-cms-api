@@ -20,6 +20,7 @@ import { HasRoles } from 'src/decorators/role.decorator';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
 import { AssignUserInProject } from './args/assign_user.dto';
+import { ChangeProjectStatus } from './args/change_project_status';
 import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectInsightInput } from './args/project_insight_input';
 import { UpdateProjectInput } from './args/update_project.dto';
@@ -113,6 +114,15 @@ export class ProjectController {
     @CurrentUser() user: any,
   ): Promise<ProjectResponse> {
     return this.projectService.updateProject(project_input, user);
+  }
+
+  @Patch('change-status/:project_id')
+  @HttpCode(HttpStatus.OK)
+  async changeProjectStatus(
+    @Body() project_input: ChangeProjectStatus,
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.changeProjectStatus(project_input, project_id);
   }
 
   @Post(':project_id/request-load')

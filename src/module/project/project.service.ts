@@ -10,6 +10,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from './../../helpers/slug-generator.service';
 import { AssignUserInProject } from './args/assign_user.dto';
+import { ChangeProjectStatus } from './args/change_project_status';
 import { CreateProjectInput } from './args/create_project.dto';
 import { ProjectInsightInput } from './args/project_insight_input';
 import { UpdateProjectInput } from './args/update_project.dto';
@@ -510,6 +511,36 @@ export class ProjectService {
       );
       return {
         message: messages.project_link_sent,
+        project: {},
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async changeProjectStatus(
+    input: ChangeProjectStatus,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const { status } = input;
+      const isProjectExist = await this.findProject(project_id);
+      if (isEmpty(isProjectExist)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: status?.toUpperCase() as ProjectStatus,
+        },
+      });
+      return {
+        message: messages.project_status_changed,
         project: {},
       };
     } catch (error) {
