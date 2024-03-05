@@ -323,11 +323,10 @@ export class QuoteService {
     }
   }
 
-  async sendQuote(quote_id: string): Promise<QuoteResponse> {
+  async shareQuote(quote_id: string): Promise<QuoteResponse> {
     try {
       const quote: any = await this.findQuote(quote_id);
       const quoteJson = JSON.stringify(quote);
-
       const script = 'src/public/scripts/create-quote-document.py';
       const { stdout, stderr } = await execAsync(
         `python3 ${script} '${quoteJson}'`,
@@ -341,6 +340,7 @@ export class QuoteService {
       }
       const filePath = stdout.trim();
       const fileName = last(stdout.trim().split('/'));
+
       await this.mailService.sendNewQuote(
         {
           customer: {
@@ -358,9 +358,20 @@ export class QuoteService {
           },
         ],
       );
+
       await this.fileService.deleteFile(filePath);
+
+      await this.prisma.quote.update({
+        where: {
+          id: quote_id,
+        },
+        data: {
+          status: QuoteStatus.SENT,
+        },
+      });
+
       return {
-        message: messages.quote_sent,
+        message: messages.quote_shared,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.UNPROCESSABLE_ENTITY);

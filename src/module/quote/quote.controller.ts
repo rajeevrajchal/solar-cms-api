@@ -65,12 +65,6 @@ export class QuoteController {
     return this.quoteService.deleteQuote(quote_id);
   }
 
-  @Post('mail/:quote_id')
-  @HttpCode(HttpStatus.OK)
-  async sendQuote(@Param('quote_id') quote_id: string): Promise<QuoteResponse> {
-    return this.quoteService.sendQuote(quote_id);
-  }
-
   @Post('approve/:quote_id')
   @HttpCode(HttpStatus.OK)
   async approveQuote(
@@ -86,5 +80,13 @@ export class QuoteController {
     @Param('quote_id') quote_id: string,
   ): Promise<QuoteResponse> {
     return this.quoteService.rejectQuote(quote_id);
+  }
+
+  @Patch('share/:quote_id')
+  @HttpCode(HttpStatus.OK)
+  async shareQuote(
+    @Param('quote_id') quote_id: string,
+  ): Promise<QuoteResponse> {
+    return this.quoteService.shareQuote(quote_id);
   }
 }
