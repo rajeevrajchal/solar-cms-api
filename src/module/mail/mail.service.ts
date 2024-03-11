@@ -98,4 +98,18 @@ export class MailService {
       attachments: attachment,
     });
   }
+
+  async customerOrderPayment(order: any, attachment: any) {
+    await this.mailerService.sendMail({
+      to: order.quote.customer.email,
+      subject: 'Your order information',
+      template: './quote_ordered',
+      context: {
+        company_name: this.configService.get<string>('COMPANY_NAME'),
+        customerName: order.quote.customer.name || order.quote.customer.email,
+        projectName: order.quote.project.name,
+      },
+      attachments: attachment,
+    });
+  }
 }
