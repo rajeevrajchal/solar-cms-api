@@ -1,0 +1,39 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Payment Confirmation - [Your Company Name]</title>
+  </head>
+  <body>
+    <p>Hello {{customer.name}},</p>
+
+    <p>We are pleased to inform you that the payment for your project with [Your
+      Company Name] has been successfully made. Thank you for your prompt
+      payment and trust in our services.</p>
+
+    <p>Below are the details of your project:</p>
+
+    <ul>
+      <li><strong>Project Name:</strong> {{project.name}}</li>
+      <li><strong>Project ID:</strong> {{project.id}}</li>
+    </ul>
+
+    <p><strong>Payment Details:</strong></p>
+    <ul>
+      <li><strong>Payment Status:</strong> Paid in Full</li>
+      <li><strong>Payment Amount:</strong> {{payment.amount}}</li>
+      <li><strong>Payment Date:</strong> {{payment.date}}</li>
+    </ul>
+
+    <p>We appreciate your timely cooperation, and we are excited to continue
+      working on your project. If you have any further questions or require
+      additional assistance, please don't hesitate to contact our team.</p>
+
+    <p>Thank you for choosing [Your Company Name]. We look forward to delivering
+      a successful project for you!</p>
+
+    <p>Best regards,
+      <br />
+      {{company_name}}
+    </p>
+  </body>
+</html>
