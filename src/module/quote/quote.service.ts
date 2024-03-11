@@ -15,6 +15,7 @@ import {
 import { exec } from 'child_process';
 import { Response } from 'express';
 import { last, reduce } from 'lodash';
+import { join } from 'path';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { FileService } from 'src/helpers/file.service';
@@ -342,6 +343,7 @@ export class QuoteService {
           },
         ],
       );
+      await this.fileService.deleteFile(join(filePath, fileName));
 
       return {
         message: messages.quote_approved,
