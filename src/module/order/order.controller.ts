@@ -18,7 +18,7 @@ import { UpdateOrder } from './dto/update-order';
 import { OrderService } from './order.service';
 
 @UseGuards(JwtAndRolesGuard)
-@HasRoles(Role.SALE)
+@HasRoles(Role.SALE, Role.ENGINEER)
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
