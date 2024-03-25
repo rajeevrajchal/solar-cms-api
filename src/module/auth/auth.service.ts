@@ -43,7 +43,9 @@ export class AuthService {
       sub: user?.id,
     };
 
-    const access_token = this.jwtService.sign(tokenPayload);
+    const access_token = this.jwtService.sign(tokenPayload, {
+      expiresIn: '30d',
+    });
 
     if (user.is_temp) {
       const reset_token = this.jwtService.sign(tokenPayload, {
