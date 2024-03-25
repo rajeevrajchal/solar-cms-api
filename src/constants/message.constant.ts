@@ -5,7 +5,7 @@ const messages = {
   change_your_password_first: 'Change your password on first login',
   login_error: 'Login Error',
   internal_server_error: 'Internal Server Error',
-
+  invalid_or_expired_token: 'invalid_or_expired_token',
   password_changed: 'Password changed successfully',
 
   token_invalid: 'Token invalid',
