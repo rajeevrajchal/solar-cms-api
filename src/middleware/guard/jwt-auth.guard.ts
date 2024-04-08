@@ -1,7 +1,12 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ExtractJwt } from 'passport-jwt';
+import messages from 'src/constants/message.constant';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -14,8 +19,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     });
   }
 
-  getRequest(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
-    return request;
+  async canActivate(context: ExecutionContext) {
+    try {
+      await super.canActivate(context);
+      return true;
+    } catch (err) {
+      if (err instanceof UnauthorizedException) {
+        throw new UnauthorizedException(messages.invalid_or_expired_token);
+      }
+      throw err;
+    }
   }
 }
