@@ -8,6 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error'],
     rawBody: true,
+    snapshot: true,
   });
 
   app.setGlobalPrefix('api');
@@ -20,7 +21,7 @@ async function bootstrap() {
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   });
-
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 }
 bootstrap();
