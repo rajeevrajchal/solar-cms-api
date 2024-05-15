@@ -30,6 +30,13 @@ enum ProjectStatus {
   EQUIPMENT_SELECTION
 }
 
+enum ProjectType {
+  SOLAR
+  WIND
+  HYDRO
+  TIDAL
+}
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
@@ -57,6 +64,12 @@ enum OrderStatus {
   PENDING
   ON_HOLD
   PAYMENT_DONE
+}
+
+enum PreferredResource {
+  WIND
+  SOLAR
+  TIDAL
 }
 
 model User {
@@ -142,27 +155,7 @@ model Project {
   location               String?
   mark_location_customer Boolean? @default(false)
 
-  estimated_area Float?
-  actual_area    Float?
-  capacity       Float?
-
-  sun_hour_summer  Float?
-  sun_hour_winter  Float?
-  sun_hour_monsoon Float?
-  sun_hour_average Float?
-  sun_direction    String?
-
-  total_sun_power_need Float?
-  correction_factor    Float?
-
-  power_out_watt    Float?
-  power_out_voltage Float?
-  reserve_power_for Float?
-
-  panel_info   String?
-  battery_type String?
-  cleaning     Boolean @default(false)
-
+  type   ProjectType   @default(SOLAR)
   status ProjectStatus @default(NEW)
 
   start_date DateTime?
@@ -172,19 +165,22 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
-  customer_id  String
-  customer     User?   @relation("customer_project", fields: [customer_id], references: [id])
-  creator      User?   @relation("creator_project", fields: [creator_id], references: [id])
-  creator_id   String
-  engineer     User?   @relation("engineer_project", fields: [engineer_id], references: [id])
-  engineer_id  String?
-  sale_user    User?   @relation("sale_user", fields: [sale_user_id], references: [id])
-  sale_user_id String?
-  parent_id    String?
+  customer_id        String
+  customer           User?              @relation("customer_project", fields: [customer_id], references: [id])
+  creator            User?              @relation("creator_project", fields: [creator_id], references: [id])
+  creator_id         String
+  engineer           User?              @relation("engineer_project", fields: [engineer_id], references: [id])
+  engineer_id        String?
+  sale_user          User?              @relation("sale_user", fields: [sale_user_id], references: [id])
+  sale_user_id       String?
+  parent_id          String?
+  preferred_resource PreferredResource?
 
-  parent   Project?  @relation("parent_child", fields: [parent_id], references: [id])
-  children Project[] @relation("parent_child")
+  parent       Project?     @relation("parent_child", fields: [parent_id], references: [id])
+  children     Project[]    @relation("parent_child")
+  project_info ProjectInfo? @relation("project_info")
 
+  services      ProjectSerivce[]
   team          ProjectToTeam[]
   equipment     Equipment[]
   electric_load ElectricLoad[]
@@ -192,6 +188,57 @@ model Project {
   model         ProjectModel[]
 
   @@map("project")
+}
+
+model ProjectInfo {
+  id String @id @unique @default(uuid())
+
+  area Float?
+
+  power_out_watt    Float?
+  power_out_voltage Float?
+  reserve_power_for Float?
+
+  tidal_range          Float?
+  tidal_currents       Float?
+  tidal_cycle_duration Float?
+  bathymetry_data      String?
+  water_density        Float?
+  seabed_conditions    String?
+
+  flow_rate            Float?
+  head                 Float?
+  reservoir_capacity   Float?
+  water_quality        String?
+  environmental_impact String?
+
+  roof_area           Float?
+  roof_orientation    String?
+  shading_factors     String?
+  electrical_capacity String?
+  solar_irradiance    Float?
+  temperature_data    String?
+
+  terrain_elevation Float?
+  terrain_roughness String?
+  obstacle_data     String?
+  wind_measurements Json?
+
+  environmental_data String?
+
+  project    Project @relation("project_info", fields: [project_id], references: [id])
+  project_id String  @unique
+
+  @@map("project_info")
+}
+
+model ProjectSerivce {
+  id String @id @unique @default(uuid())
+
+  project    Project? @relation(fields: [project_id], references: [id])
+  project_id String?
+
+  @@map("project_services")
 }
 
 model ProjectModel {
@@ -216,6 +263,54 @@ model ProjectToTeam {
   @@map("project_team_pivot")
 }
 
+model Quote {
+  id                String      @id @unique @default(uuid())
+  name              String
+  inventory_cost    Float       @default(0)
+  net_total         Float       @default(0)
+  installation_cost Float       @default(0)
+  discount          Float?      @default(0)
+  adjustment        Float?      @default(0)
+  vat               Float?      @default(0)
+  verification_file String?
+  status            QuoteStatus @default(PENDING)
+
+  project_id  String
+  customer_id String
+  customer    User    @relation("customer_quote", fields: [customer_id], references: [id])
+  project     Project @relation(fields: [project_id], references: [id])
+
+  created_by String
+  creator    User   @relation("creator_quote", fields: [created_by], references: [id])
+
+  order Order[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("quote")
+}
+
+model Order {
+  id           String      @id @unique @default(uuid())
+  name         String?
+  reason       String?
+  payment      Float?
+  full_payment Boolean     @default(false)
+  status       OrderStatus @default(PENDING)
+
+  quote_id   String?
+  quote      Quote?  @relation(fields: [quote_id], references: [id])
+  quote_data Json?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("order")
+}
+
 model Vendor {
   id          String  @id @unique @default(uuid())
   name        String
@@ -229,9 +324,26 @@ model Vendor {
   updatedAt DateTime  @default(now()) @updatedAt
 
   inventory Inventory[]
+  documents VendorDocument[]
 
   @@map("vendor")
 }
+
+model VendorDocument {
+  id          String  @id @unique @default(uuid())
+  document    String
+  description String?
+
+  vendor_id String
+  vendor    Vendor @relation(fields: [vendor_id], references: [id])
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("vendor_document")
+}
+
 
 model Inventory {
   id   String @id @unique @default(uuid())
@@ -283,53 +395,6 @@ model Equipment {
   project    Project @relation(fields: [project_id], references: [id])
 
   @@map("equipment")
-}
-
-model Quote {
-  id                String      @id @unique @default(uuid())
-  name              String
-  inventory_cost    Float       @default(0)
-  net_total         Float       @default(0)
-  installation_cost Float       @default(0)
-  discount          Float?      @default(0)
-  adjustment        Float?      @default(0)
-  vat               Float?      @default(0)
-  verification_file String?
-  status            QuoteStatus @default(PENDING)
-
-  project_id  String
-  customer_id String
-  customer    User    @relation("customer_quote", fields: [customer_id], references: [id])
-  project     Project @relation(fields: [project_id], references: [id])
-
-  created_by String
-  creator    User   @relation("creator_quote", fields: [created_by], references: [id])
-
-  order Order[]
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-
-  @@map("quote")
-}
-
-model Order {
-  id           String      @id @unique @default(uuid())
-  name         String?
-  reason       String?
-  payment      Float?
-  full_payment Boolean     @default(false)
-  status       OrderStatus @default(PENDING)
-
-  quote_id String?
-  quote    Quote?  @relation(fields: [quote_id], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-
-  @@map("order")
 }
 
 model CustomerService {
