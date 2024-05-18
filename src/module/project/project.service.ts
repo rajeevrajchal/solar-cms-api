@@ -55,6 +55,8 @@ export class ProjectService {
         role: true,
       },
     },
+    project_info: true,
+    services: true,
   };
 
   async findProject(project_id): Promise<Project> {
@@ -149,7 +151,6 @@ export class ProjectService {
               inventory: true,
             },
           },
-          quote: true,
           model: true,
           electric_load: true,
         },
@@ -170,11 +171,6 @@ export class ProjectService {
       );
 
       if (customer) {
-        const sun_hours = [
-          project.sun_hour_monsoon,
-          project.sun_hour_summer,
-          project.sun_hour_winter,
-        ];
         const project_name = this.slugService.generateSlugWithCustomName(
           customer.name,
         );
@@ -193,11 +189,6 @@ export class ProjectService {
             user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
           sale_user:
             user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
-          sun_hour_average: sun_hours.some((item) => item === null)
-            ? 0
-            : sun_hours.reduce((acc, val) => {
-                return val !== null ? acc * val : acc;
-              }, 1) / sun_hours.length,
           status:
             user?.role === Role.ENGINEER
               ? ProjectStatus.SITE_SURVEY
@@ -367,31 +358,12 @@ export class ProjectService {
       if (!isProjectExist) {
         throw new HttpException('project not found', HttpStatus.BAD_REQUEST);
       }
-      const sun_hours = [
-        project?.sun_hours?.sun_hour_monsoon || isProjectExist.sun_hour_monsoon,
-        project?.sun_hours?.sun_hour_summer || isProjectExist.sun_hour_summer,
-        project?.sun_hours?.sun_hour_winter || isProjectExist.sun_hour_winter,
-      ];
       const updatedProject = await this.prisma.project.update({
         where: {
           id: project.id,
         },
         data: {
           status: ProjectStatus.EQUIPMENT_SELECTION,
-          sun_hour_monsoon:
-            project?.sun_hours?.sun_hour_monsoon ||
-            isProjectExist.sun_hour_monsoon,
-          sun_hour_summer:
-            project?.sun_hours?.sun_hour_summer ||
-            isProjectExist.sun_hour_summer,
-          sun_hour_winter:
-            project?.sun_hours?.sun_hour_winter ||
-            isProjectExist.sun_hour_winter,
-          sun_hour_average: sun_hours.some((item) => item === null)
-            ? 0
-            : sun_hours.reduce((acc, val) => {
-                return val !== null ? acc + val : acc;
-              }, 1) / sun_hours.length,
         },
       });
       return {
