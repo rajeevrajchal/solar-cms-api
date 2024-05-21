@@ -66,7 +66,6 @@ enum OrderStatus {
   PAYMENT_DONE
 }
 
-
 model User {
   id       String  @id @unique @default(uuid())
   name     String
@@ -143,6 +142,7 @@ model ElectricLoad {
 
 model Project {
   id                     String   @id @unique @default(uuid())
+  code                   String
   name                   String
   description            String?
   latitude               Float?
@@ -160,15 +160,15 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
-  customer_id        String
-  customer           User?              @relation("customer_project", fields: [customer_id], references: [id])
-  creator            User?              @relation("creator_project", fields: [creator_id], references: [id])
-  creator_id         String
-  engineer           User?              @relation("engineer_project", fields: [engineer_id], references: [id])
-  engineer_id        String?
-  sale_user          User?              @relation("sale_user", fields: [sale_user_id], references: [id])
-  sale_user_id       String?
-  parent_id          String?
+  customer_id  String
+  customer     User?   @relation("customer_project", fields: [customer_id], references: [id])
+  creator      User?   @relation("creator_project", fields: [creator_id], references: [id])
+  creator_id   String
+  engineer     User?   @relation("engineer_project", fields: [engineer_id], references: [id])
+  engineer_id  String?
+  sale_user    User?   @relation("sale_user", fields: [sale_user_id], references: [id])
+  sale_user_id String?
+  parent_id    String?
 
   parent       Project?     @relation("parent_child", fields: [parent_id], references: [id])
   children     Project[]    @relation("parent_child")
@@ -337,7 +337,6 @@ model VendorDocument {
 
   @@map("vendor_document")
 }
-
 
 model Inventory {
   id   String @id @unique @default(uuid())

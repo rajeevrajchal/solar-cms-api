@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Project, ProjectStatus, Role, User } from '@prisma/client';
 import { filter, isEmpty, map, omit } from 'lodash';
 import messages from 'src/constants/message.constant';
@@ -25,6 +26,7 @@ export class ProjectService {
     private readonly mailService: MailService,
     private readonly solarService: SolarService,
     private readonly cloudinary: CloudinaryService,
+    private readonly configService: ConfigService,
   ) {}
 
   projectAttribute = {
@@ -166,6 +168,10 @@ export class ProjectService {
     user: User,
   ): Promise<ProjectResponse> {
     try {
+      const project_code_initial = this.configService.get<string>(
+        'PROJECT_CODE_INITIAL',
+      );
+
       const customer = await this.userChecker.checkUserExistById(
         project.customer_id,
       );
@@ -174,9 +180,26 @@ export class ProjectService {
         const project_name = this.slugService.generateSlugWithCustomName(
           customer.name,
         );
+        const lastProject = await this.prisma.project.findFirst({
+          where: { code: { startsWith: project_code_initial } },
+        });
+
+        let nextCodeNumber = 1;
+        if (lastProject && lastProject.code) {
+          const lastCodeNumber = parseInt(
+            lastProject.code.replace(project_code_initial, ''),
+            10,
+          );
+          if (!isNaN(lastCodeNumber)) {
+            nextCodeNumber = lastCodeNumber + 1;
+          }
+        }
+        const newProjectCode = `${project_code_initial}${String(nextCodeNumber).padStart(4, '0')}`;
+
         const params: any = {
           ...omit(project, ['customer_id']),
           name: project_name,
+          code: newProjectCode,
           customer: {
             connect: { id: project.customer_id },
           },
