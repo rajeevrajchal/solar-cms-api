@@ -140,9 +140,11 @@ model ElectricLoad {
   @@map("customer_electric_load")
 }
 
+// id            String         @id @default(dbgenerated("'user-' || gen_random_uuid()"))
+
 model Project {
   id                     String   @id @unique @default(uuid())
-  code                   String
+  code                   Int      @unique @default(autoincrement())
   name                   String
   description            String?
   latitude               Float?

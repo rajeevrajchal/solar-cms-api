@@ -43,7 +43,7 @@ export class PublicService {
     project_id: string,
   ): Promise<any> {
     try {
-      const project = await this.projectService.findProject(project_id);
+      const project = await this.projectService.find(project_id);
       if (project) {
         const param = electric_load.map((load) => ({
           ...load,
