@@ -1,13 +1,8 @@
-import {
-  IsNotEmpty,
-  IsEmpty,
-  IsString,
-  IsNumber,
-  IsBoolean,
-} from 'class-validator';
+import { ProjectType } from '@prisma/client';
+import { IsBoolean, IsEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateProjectInput {
-  @IsNotEmpty()
+  @IsEmpty()
   @IsString()
   name: string;
 
@@ -21,31 +16,19 @@ export class CreateProjectInput {
 
   @IsEmpty()
   @IsNumber()
-  actual_area: number;
+  area: number;
 
   @IsEmpty()
   @IsNumber()
-  sun_hour_summer: number;
+  orientation: string;
 
   @IsEmpty()
   @IsNumber()
-  sun_hour_winter: number;
+  shading_factors: number;
 
   @IsEmpty()
   @IsNumber()
-  sun_hour_monsoon: number;
-
-  @IsEmpty()
-  @IsNumber()
-  sun_direction: string;
-
-  @IsEmpty()
-  @IsNumber()
-  total_sun_power_need: number;
-
-  @IsEmpty()
-  @IsNumber()
-  correction_factor: number;
+  solar_irradiance: number;
 
   @IsEmpty()
   @IsNumber()
@@ -60,24 +43,32 @@ export class CreateProjectInput {
   power_out_watt: number;
 
   @IsEmpty()
-  @IsBoolean()
-  cleaning: boolean;
+  @IsNumber()
+  electrical_capacity: number;
 
-  @IsNotEmpty()
-  @IsBoolean()
+  @IsEmpty()
+  @IsNumber()
+  tilt_angle: string;
+
+  @IsEmpty()
+  @IsString()
+  panel_type: string;
+
+  @IsEmpty()
+  @IsString()
   customer_id: string;
 
-  @IsNotEmpty()
-  @IsBoolean()
-  panel_info: string;
-
-  @IsNotEmpty()
-  @IsBoolean()
-  battery_type: string;
+  @IsEmpty()
+  @IsString()
+  location: string;
 
   @IsEmpty()
   @IsString()
   parent_id: string;
+
+  @IsEmpty()
+  @IsString()
+  type: ProjectType;
 
   @IsEmpty()
   @IsBoolean()
