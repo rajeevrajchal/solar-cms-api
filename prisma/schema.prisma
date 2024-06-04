@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 enum Role {
   ADMIN
   WORKER
@@ -140,20 +141,19 @@ model ElectricLoad {
   @@map("customer_electric_load")
 }
 
-// id            String         @id @default(dbgenerated("'user-' || gen_random_uuid()"))
-
 model Project {
   id                     String   @id @unique @default(uuid())
   code                   Int      @unique @default(autoincrement())
-  name                   String
+  name                   String?
   description            String?
   latitude               Float?
   longitude              Float?
   location               String?
   mark_location_customer Boolean? @default(false)
 
-  type   ProjectType   @default(SOLAR)
-  status ProjectStatus @default(NEW)
+  type              ProjectType   @default(SOLAR)
+  status            ProjectStatus @default(NEW)
+  grid_connectivity Boolean @default(false)
 
   start_date DateTime? @default(now())
   end_date   DateTime?
@@ -162,7 +162,7 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
-  customer_id  String
+  customer_id  String?
   customer     User?   @relation("customer_project", fields: [customer_id], references: [id])
   creator      User?   @relation("creator_project", fields: [creator_id], references: [id])
   creator_id   String
@@ -191,10 +191,12 @@ model ProjectInfo {
 
   area Float?
 
-  power_out_watt    Float?
-  power_out_voltage Float?
-  reserve_power_for Float?
+  power_out_watt      Float?
+  power_out_voltage   Float?
+  reserve_power_for   Float?
+  electrical_capacity Float?
 
+  // tidal
   tidal_range          Float?
   tidal_currents       Float?
   tidal_cycle_duration Float?
@@ -202,19 +204,22 @@ model ProjectInfo {
   water_density        Float?
   seabed_conditions    String?
 
+  // hydro
   flow_rate            Float?
   head                 Float?
   reservoir_capacity   Float?
   water_quality        String?
   environmental_impact String?
 
-  roof_area           Float?
-  roof_orientation    String?
-  shading_factors     String?
-  electrical_capacity String?
-  solar_irradiance    Float?
-  temperature_data    String?
+  // solar
+  orientation      String?
+  shading_factors  Float?
+  solar_irradiance Float?
+  temperature_data String?
+  tilt_angle       Float?
+  panel_type       String?
 
+  // wind
   terrain_elevation Float?
   terrain_roughness String?
   obstacle_data     String?

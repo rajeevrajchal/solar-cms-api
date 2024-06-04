@@ -1,7 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Project, ProjectStatus, Role, User } from '@prisma/client';
-import { omit } from 'lodash';
+import {
+  Project,
+  ProjectStatus,
+  ProjectType,
+  Role,
+  User,
+} from '@prisma/client';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { SolarService } from 'src/helpers/solar.service';
@@ -129,44 +134,47 @@ export class ProjectService {
     user: User,
   ): Promise<ProjectResponse> {
     try {
-      const customer = await this.userChecker.checkUserExistById(
-        project.customer_id,
-      );
-
-      if (customer) {
-        const project_name = this.slugService.generateSlugWithCustomName(
-          customer.name,
-        );
-
-        const params: any = {
-          ...omit(project, ['customer_id']),
-          name: project_name,
-          customer: {
-            connect: { id: project.customer_id },
+      const params: any = {
+        type: project.type.toUpperCase() as ProjectType,
+        name: project.name,
+        latitude: project.latitude,
+        longitude: project.longitude,
+        location: project.location,
+        engineer:
+          user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
+        sale_user:
+          user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
+        status:
+          user?.role === Role.ENGINEER
+            ? ProjectStatus.SITE_SURVEY
+            : ProjectStatus.NEW,
+        creator: {
+          connect: {
+            id: user?.id,
           },
-          creator: {
-            connect: {
-              id: user?.id,
-            },
+        },
+        project_info: {
+          create: {
+            area: project.area,
+            power_out_watt: project.power_out_watt,
+            power_out_voltage: project.power_out_voltage,
+            reserve_power_for: project.reserve_power_for || null,
+            electrical_capacity: project.electrical_capacity || null,
+            orientation: project.orientation,
+            shading_factors: project.shading_factors,
+            solar_irradiance: project.solar_irradiance,
+            tilt_angle: project.tilt_angle,
+            panel_type: project.panel_type,
           },
-          engineer:
-            user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
-          sale_user:
-            user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
-          status:
-            user?.role === Role.ENGINEER
-              ? ProjectStatus.SITE_SURVEY
-              : ProjectStatus.NEW,
-        };
-        const info = await this.prisma.project.create({
-          data: params,
-        });
-        await this.mailService.sendProjectInfoToCustomer(customer, info);
-        return {
-          message: messages.project_create_success,
-          project: info,
-        };
-      }
+        },
+      };
+      const info = await this.prisma.project.create({
+        data: params,
+      });
+      return {
+        message: messages.project_create_success,
+        project: info,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
