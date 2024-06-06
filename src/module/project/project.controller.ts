@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -16,6 +17,7 @@ import { HasRoles } from 'src/decorators/role.decorator';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
 import { CreateProjectInput } from './args/create_project.dto';
+import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectService } from './project.service';
 import { ProjectResponse } from './res/project-response';
 
@@ -46,6 +48,15 @@ export class ProjectController {
     @CurrentUser() user: any,
   ): Promise<ProjectResponse> {
     return this.projectService.create(project_input, user);
+  }
+
+  @Patch(':project_id')
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Body() project_input: UpdateProjectInput,
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.update(project_input, project_id);
   }
 
   @Delete(':project_id')
