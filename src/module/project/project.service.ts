@@ -7,6 +7,7 @@ import {
   Role,
   User,
 } from '@prisma/client';
+import { isEmpty } from 'lodash';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { SolarService } from 'src/helpers/solar.service';
@@ -16,6 +17,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from './../../helpers/slug-generator.service';
 import { CreateProjectInput } from './args/create_project.dto';
+import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectResponse } from './res/project-response';
 
 @Injectable()
@@ -146,7 +148,7 @@ export class ProjectService {
           user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
         status:
           user?.role === Role.ENGINEER
-            ? ProjectStatus.SITE_SURVEY
+            ? ProjectStatus.DESIGN_IN_PROGRESS
             : ProjectStatus.NEW,
         creator: {
           connect: {
@@ -174,6 +176,33 @@ export class ProjectService {
       return {
         message: messages.project_create_success,
         project: info,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async update(
+    input: UpdateProjectInput,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: input,
+      });
+      return {
+        message: messages.project_updated,
+        project: {},
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
