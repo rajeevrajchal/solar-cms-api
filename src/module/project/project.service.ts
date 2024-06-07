@@ -7,7 +7,7 @@ import {
   Role,
   User,
 } from '@prisma/client';
-import { isEmpty } from 'lodash';
+import { isEmpty, map } from 'lodash';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { SolarService } from 'src/helpers/solar.service';
@@ -17,6 +17,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from './../../helpers/slug-generator.service';
 import { CreateProjectInput } from './args/create_project.dto';
+import { ProjectEquipmentInput } from './args/project_equipment';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectResponse } from './res/project-response';
 
@@ -194,7 +195,7 @@ export class ProjectService {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
-      await this.prisma.project.update({
+      const update_project = await this.prisma.project.update({
         where: {
           id: project_id,
         },
@@ -202,7 +203,52 @@ export class ProjectService {
       });
       return {
         message: messages.project_updated,
-        project: {},
+        project: update_project,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async connect_equipment(
+    input: ProjectEquipmentInput,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      const payload: any = map(input.equipments, (data, index) => {
+        return {
+          quantity: Number(data.quantity),
+          component: data.component_type,
+          connection: data.connection,
+          set_name: data.set_name || `${data.component_type}-${index}`,
+          voltage: data?.voltage || 0,
+          ampere: data?.ampere || 0,
+          watt: data?.watt || 0,
+          inventory_id: data.inventory,
+          project_id: project_id,
+        };
+      });
+      await this.prisma.equipment.createMany({
+        data: payload,
+      });
+      const update_project = await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.INSTALLATION_IN_PROGRESS,
+        },
+      });
+      return {
+        message: messages.project_updated,
+        project: update_project,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
