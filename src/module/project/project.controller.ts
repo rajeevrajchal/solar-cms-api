@@ -17,6 +17,7 @@ import { HasRoles } from 'src/decorators/role.decorator';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { JwtAndRolesGuard } from 'src/middleware/guard/jwt-auth-role.guard';
 import { CreateProjectInput } from './args/create_project.dto';
+import { ProjectEquipmentInput } from './args/project_equipment';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectService } from './project.service';
 import { ProjectResponse } from './res/project-response';
@@ -57,6 +58,15 @@ export class ProjectController {
     @Param('project_id') project_id: string,
   ): Promise<ProjectResponse> {
     return this.projectService.update(project_input, project_id);
+  }
+
+  @Patch(':project_id/equipment')
+  @HttpCode(HttpStatus.OK)
+  async connect_equipment(
+    @Body() equipment_input: ProjectEquipmentInput,
+    @Param('project_id') project_id: string,
+  ): Promise<ProjectResponse> {
+    return this.projectService.connect_equipment(equipment_input, project_id);
   }
 
   @Delete(':project_id')
