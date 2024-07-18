@@ -17,6 +17,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from './../../helpers/slug-generator.service';
 import { CreateProjectInput } from './args/create_project.dto';
+import { ProjectDesign } from './args/project_desgin';
 import { ProjectEquipmentInput } from './args/project_equipment';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectResponse } from './res/project-response';
@@ -249,6 +250,27 @@ export class ProjectService {
       return {
         message: messages.project_updated,
         project: update_project,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async design_input(
+    input: ProjectDesign,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      return {
+        message: messages.project_updated,
+        project: project,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
