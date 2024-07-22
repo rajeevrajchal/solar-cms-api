@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SlugService } from 'src/helpers/slug-generator.service';
 import { SolarService } from 'src/helpers/solar.service';
 import { UserCheckerService } from 'src/helpers/user-checker.service';
@@ -23,6 +24,7 @@ import { ProjectService } from './project.service';
     SlugService,
     MailService,
     SolarService,
+    ConfigService,
   ],
 })
 export class ProjectModule {}
