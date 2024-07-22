@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { ElectricLoad, Project } from '@prisma/client';
-import { ProjectService } from '../project/project.service';
 import messages from 'src/constants/message.constant';
+import { PrismaService } from '../prisma/prisma.service';
+import { ProjectService } from '../project/project.service';
 
 @Injectable()
 export class PublicService {
@@ -23,9 +23,6 @@ export class PublicService {
           latitude: true,
           longitude: true,
           location: true,
-          panel_info: true,
-          battery_type: true,
-          cleaning: true,
           customer: {
             select: {
               name: true,
@@ -46,7 +43,7 @@ export class PublicService {
     project_id: string,
   ): Promise<any> {
     try {
-      const project = await this.projectService.findProject(project_id);
+      const project = await this.projectService.find(project_id);
       if (project) {
         const param = electric_load.map((load) => ({
           ...load,
