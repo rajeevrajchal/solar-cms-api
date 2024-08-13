@@ -9,8 +9,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Project, Role, User } from '@prisma/client';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { HasRoles } from 'src/decorators/role.decorator';
@@ -63,11 +66,17 @@ export class ProjectController {
 
   @Patch(':project_id/project-model')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('design_file'))
   async update_design(
     @Body() design_input: ProjectDesign,
     @Param('project_id') project_id: string,
+    @UploadedFile() design_file: Express.Multer.File,
   ): Promise<ProjectResponse> {
-    return this.projectService.design_input(design_input, project_id);
+    return this.projectService.design_input(
+      design_input,
+      project_id,
+      design_file,
+    );
   }
 
   @Patch(':project_id/equipment')
