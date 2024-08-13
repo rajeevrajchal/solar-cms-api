@@ -259,6 +259,7 @@ export class ProjectService {
   async design_input(
     input: ProjectDesign,
     project_id: string,
+    design_file: Express.Multer.File,
   ): Promise<ProjectResponse> {
     try {
       const project = await this.find(project_id);
@@ -268,9 +269,30 @@ export class ProjectService {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
+      const folder_name = `studio/project/${project.id}/`;
+      const project_design = await this.cloudinary.uploadFile(
+        design_file,
+        folder_name,
+      );
+      await this.prisma.projectModel.create({
+        data: {
+          model_url: project_design?.url,
+          image_id: project_design?.public_id,
+          type: project.type,
+          project_id: project_id,
+        },
+      });
+      const update_project = await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.EQUIPMENT_SELECTION,
+        },
+      });
       return {
         message: messages.project_updated,
-        project: project,
+        project: update_project,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
