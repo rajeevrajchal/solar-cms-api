@@ -15,6 +15,7 @@ import { JwtAuthGuard } from 'src/middleware/guard/jwt-auth.guard';
 import { LocalAuthGuard } from 'src/middleware/guard/local-auth.guard';
 import { AuthService } from './auth.service';
 import { LogoutDto } from './dto/response/logout.response.dto';
+import { Request } from 'express';
 
 @Controller()
 export class AuthController {
@@ -23,7 +24,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @UseGuards(LocalAuthGuard)
-  login(@Req() req): Promise<any> {
+  login(@Req() req: Request): Promise<any> {
     return this.authService.login(req);
   }
 
