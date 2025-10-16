@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
-import * as moment from 'moment';
+import moment from 'moment';
 import messages from 'src/constants/message.constant';
 import { OtpService } from 'src/helpers/otp.service';
 import { PasswordHashService } from 'src/helpers/password-hash.service';
