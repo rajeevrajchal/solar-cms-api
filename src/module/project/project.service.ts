@@ -1,6 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Project, ProjectStatus, Role, User } from '@prisma/client';
-import { filter, isEmpty, map, omit } from 'lodash';
+import { ConfigService } from '@nestjs/config';
+import {
+  Project,
+  ProjectStatus,
+  ProjectType,
+  Role,
+  User,
+} from '@prisma/client';
+import { isEmpty, map } from 'lodash';
 import messages from 'src/constants/message.constant';
 import { QueryParamsDto } from 'src/dto/query-decorators';
 import { SolarService } from 'src/helpers/solar.service';
@@ -9,10 +16,9 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SlugService } from './../../helpers/slug-generator.service';
-import { AssignUserInProject } from './args/assign_user.dto';
-import { ChangeProjectStatus } from './args/change_project_status';
 import { CreateProjectInput } from './args/create_project.dto';
-import { ProjectInsightInput } from './args/project_insight_input';
+import { ProjectDesign } from './args/project_desgin';
+import { ProjectEquipmentInput } from './args/project_equipment';
 import { UpdateProjectInput } from './args/update_project.dto';
 import { ProjectResponse } from './res/project-response';
 
@@ -25,6 +31,7 @@ export class ProjectService {
     private readonly mailService: MailService,
     private readonly solarService: SolarService,
     private readonly cloudinary: CloudinaryService,
+    private readonly configService: ConfigService,
   ) {}
 
   projectAttribute = {
@@ -55,15 +62,26 @@ export class ProjectService {
         role: true,
       },
     },
+    project_info: true,
+    services: true,
   };
 
-  async findProject(project_id): Promise<Project> {
+  async find(project_id): Promise<Project> {
     return this.prisma.project.findUniqueOrThrow({
       where: {
         id: project_id,
       },
       include: {
-        customer: true,
+        ...this.projectAttribute,
+        children: true,
+        equipment: {
+          select: {
+            quantity: true,
+            inventory: true,
+          },
+        },
+        model: true,
+        electric_load: true,
       },
     });
   }
@@ -84,11 +102,7 @@ export class ProjectService {
 
       if (search) {
         where.name = {
-          contains: search,
-          mode: 'insensitive',
-        };
-        where.customer.name = {
-          contains: search,
+          contains: String(search),
           mode: 'insensitive',
         };
       }
@@ -110,230 +124,182 @@ export class ProjectService {
     }
   }
 
-  async getProjectForQuote(): Promise<Project[]> {
+  async show(project_id: string): Promise<Project> {
     try {
-      const projects = await this.prisma.project.findMany({
-        where: {
-          deletedAt: null,
-          status: ProjectStatus.CUSTOMER_INQUIRY,
-        },
-        include: {
-          ...this.projectAttribute,
-          quote: true,
-          equipment: {
-            select: {
-              quantity: true,
-              inventory: true,
-            },
-          },
-        },
-      });
-      return filter(projects, (item) => item.quote.length <= 0);
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async getSingleProject(project_id: string): Promise<Project> {
-    try {
-      const project = this.prisma.project.findFirstOrThrow({
-        where: {
-          id: project_id,
-        },
-        include: {
-          ...this.projectAttribute,
-          children: true,
-          equipment: {
-            select: {
-              quantity: true,
-              inventory: true,
-            },
-          },
-          quote: true,
-          model: true,
-          electric_load: true,
-        },
-      });
+      const project = this.find(project_id);
       return project;
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async storeProject(
+  async create(
     project: Partial<CreateProjectInput>,
     user: User,
   ): Promise<ProjectResponse> {
     try {
-      const customer = await this.userChecker.checkUserExistById(
-        project.customer_id,
-      );
-
-      if (customer) {
-        const sun_hours = [
-          project.sun_hour_monsoon,
-          project.sun_hour_summer,
-          project.sun_hour_winter,
-        ];
-        const project_name = this.slugService.generateSlugWithCustomName(
-          customer.name,
-        );
-        const params: any = {
-          ...omit(project, ['customer_id']),
-          name: project_name,
-          customer: {
-            connect: { id: project.customer_id },
+      const params: any = {
+        type: project.type.toUpperCase() as ProjectType,
+        name: project.name,
+        latitude: project.latitude,
+        longitude: project.longitude,
+        location: project.location,
+        engineer:
+          user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
+        sale_user:
+          user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
+        status:
+          user?.role === Role.ENGINEER
+            ? ProjectStatus.DESIGN_IN_PROGRESS
+            : ProjectStatus.NEW,
+        creator: {
+          connect: {
+            id: user?.id,
           },
-          creator: {
-            connect: {
-              id: user?.id,
-            },
+        },
+        project_info: {
+          create: {
+            area: project.area,
+            power_out_watt: project.power_out_watt,
+            power_out_voltage: project.power_out_voltage,
+            reserve_power_for: project.reserve_power_for || null,
+            electrical_capacity: project.electrical_capacity || null,
+            orientation: project.orientation,
+            shading_factors: project.shading_factors,
+            solar_irradiance: project.solar_irradiance,
+            tilt_angle: project.tilt_angle,
+            panel_type: project.panel_type,
           },
-          engineer:
-            user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
-          sale_user:
-            user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
-          sun_hour_average: sun_hours.some((item) => item === null)
-            ? 0
-            : sun_hours.reduce((acc, val) => {
-                return val !== null ? acc * val : acc;
-              }, 1) / sun_hours.length,
-          status:
-            user?.role === Role.ENGINEER
-              ? ProjectStatus.SITE_SURVEY
-              : ProjectStatus.NEW,
-        };
-        const info = await this.prisma.project.create({
-          data: params,
-        });
-        await this.mailService.sendProjectInfoToCustomer(customer, info);
-        return {
-          message: messages.project_create_success,
-          project: info,
-        };
-      }
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async updateProject(
-    project: Partial<UpdateProjectInput>,
-    user: User,
-  ): Promise<ProjectResponse> {
-    try {
-      const customer = await this.userChecker.checkUserExistById(
-        project.customer_id,
-      );
-      const project_data: any = await this.findProject(project.id);
-      if (customer && project_data) {
-        const solarPowerHours = await this.solarService.getAverageSunlightHours(
-          project.latitude,
-          project.longitude,
-        );
-
-        const sun_hours = [
-          project.sun_hour_monsoon || solarPowerHours.monsoon,
-          project.sun_hour_summer || solarPowerHours.summer,
-          project.sun_hour_winter || solarPowerHours.winter,
-        ];
-        let project_name;
-        if (customer.name !== project_data?.customer?.name) {
-          project_name = this.slugService.generateSlugWithCustomName(
-            customer.name,
-          );
-        }
-        const params: any = {
-          ...omit(project, ['customer_id']),
-          name: project_name,
-          customer: {
-            connect: { id: project.customer_id },
-          },
-          creator: {
-            connect: {
-              id: user?.id,
-            },
-          },
-          sun_hour_monsoon: solarPowerHours.monsoon,
-          sun_hour_summer: solarPowerHours.summer,
-          sun_hour_winter: solarPowerHours.winter,
-          sun_hour_average: sun_hours.some((item) => item === null)
-            ? 0
-            : sun_hours.reduce((acc, val) => {
-                return val !== null ? acc * val : acc;
-              }, 1) / sun_hours.length,
-          status: ProjectStatus.NEW,
-        };
-        const info = await this.prisma.project.update({
-          where: {
-            id: project.id,
-          },
-          data: params,
-        });
-        return {
-          message: messages.project_updated,
-          project: info,
-        };
-      }
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  // TODO: In future
-  async copyProject(project_id: string): Promise<ProjectResponse> {
-    try {
-      const project: any = await this.findProject(project_id);
-      const new_project = await this.prisma.project.create({
-        data: {
-          ...omit(project, [
-            'id',
-            'deletedAt',
-            'createdAt',
-            'updatedAt',
-            'start_date',
-            'end_data',
-          ]),
-          status: ProjectStatus.NEW,
-        } as any,
+        },
+      };
+      const info = await this.prisma.project.create({
+        data: params,
       });
       return {
-        message: messages.project_copied,
-        project: new_project,
+        message: messages.project_create_success,
+        project: info,
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async assignUserInProject(payload: AssignUserInProject): Promise<any> {
+  async update(
+    input: UpdateProjectInput,
+    project_id: string,
+  ): Promise<ProjectResponse> {
     try {
-      const { project_id, owner_id } = payload;
-      const user = await this.userChecker.checkUserExistById(owner_id);
-      const project = await this.findProject(project_id);
-      if (user && project) {
-        await this.prisma.project.update({
-          where: {
-            id: project_id,
-          },
-          data: {
-            engineer:
-              user?.role === Role.ENGINEER ? { connect: { id: user?.id } } : {},
-            sale_user:
-              user?.role === Role.SALE ? { connect: { id: user?.id } } : {},
-            status: ProjectStatus.SITE_SURVEY,
-          },
-        });
-        return {
-          message: messages.project_assigned_engineer,
-        };
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
+      const update_project = await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: input,
+      });
+      return {
+        message: messages.project_updated,
+        project: update_project,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async deleteProject(project_id: string): Promise<ProjectResponse> {
+  async connect_equipment(
+    input: ProjectEquipmentInput,
+    project_id: string,
+  ): Promise<ProjectResponse> {
+    try {
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      const payload: any = map(input.equipments, (data, index) => {
+        return {
+          quantity: Number(data.quantity),
+          component: data.component_type,
+          connection: data.connection,
+          set_name: data.set_name || `${data.component_type}-${index}`,
+          voltage: data?.voltage || 0,
+          ampere: data?.ampere || 0,
+          watt: data?.watt || 0,
+          inventory_id: data.inventory,
+          project_id: project_id,
+        };
+      });
+      await this.prisma.equipment.createMany({
+        data: payload,
+      });
+      const update_project = await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.INSTALLATION_IN_PROGRESS,
+        },
+      });
+      return {
+        message: messages.project_updated,
+        project: update_project,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async design_input(
+    input: ProjectDesign,
+    project_id: string,
+    design_file: Express.Multer.File,
+  ): Promise<ProjectResponse> {
+    try {
+      const project = await this.find(project_id);
+      if (isEmpty(project)) {
+        throw new HttpException(
+          messages.project_not_found,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      const folder_name = `studio/project/${project.id}/`;
+      const project_design = await this.cloudinary.uploadFile(
+        design_file,
+        folder_name,
+      );
+      await this.prisma.projectModel.create({
+        data: {
+          model_url: project_design?.url,
+          image_id: project_design?.public_id,
+          type: project.type,
+          project_id: project_id,
+        },
+      });
+      const update_project = await this.prisma.project.update({
+        where: {
+          id: project_id,
+        },
+        data: {
+          status: ProjectStatus.EQUIPMENT_SELECTION,
+        },
+      });
+      return {
+        message: messages.project_updated,
+        project: update_project,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async delete(project_id: string): Promise<ProjectResponse> {
     try {
       await this.prisma.$transaction([
         this.prisma.project.updateMany({
@@ -353,195 +319,6 @@ export class ProjectService {
       return {
         message: messages.customer_deleted,
         project: null,
-      };
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async updateProjectInsight(
-    project: Partial<ProjectInsightInput>,
-  ): Promise<ProjectResponse> {
-    try {
-      const isProjectExist = await this.findProject(project?.id);
-      if (!isProjectExist) {
-        throw new HttpException('project not found', HttpStatus.BAD_REQUEST);
-      }
-      const sun_hours = [
-        project?.sun_hours?.sun_hour_monsoon || isProjectExist.sun_hour_monsoon,
-        project?.sun_hours?.sun_hour_summer || isProjectExist.sun_hour_summer,
-        project?.sun_hours?.sun_hour_winter || isProjectExist.sun_hour_winter,
-      ];
-      const updatedProject = await this.prisma.project.update({
-        where: {
-          id: project.id,
-        },
-        data: {
-          status: ProjectStatus.EQUIPMENT_SELECTION,
-          sun_hour_monsoon:
-            project?.sun_hours?.sun_hour_monsoon ||
-            isProjectExist.sun_hour_monsoon,
-          sun_hour_summer:
-            project?.sun_hours?.sun_hour_summer ||
-            isProjectExist.sun_hour_summer,
-          sun_hour_winter:
-            project?.sun_hours?.sun_hour_winter ||
-            isProjectExist.sun_hour_winter,
-          sun_hour_average: sun_hours.some((item) => item === null)
-            ? 0
-            : sun_hours.reduce((acc, val) => {
-                return val !== null ? acc + val : acc;
-              }, 1) / sun_hours.length,
-        },
-      });
-      return {
-        message: messages.project_updated,
-        project: updatedProject,
-      };
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  // function to create the model and also the connection
-  async updateProjectModel(
-    models: Array<Express.Multer.File>,
-    project_id: string,
-  ): Promise<ProjectResponse> {
-    try {
-      const isProjectExist = await this.findProject(project_id);
-      const folder_name = `studio/projects/${isProjectExist.id}/`;
-
-      if (isEmpty(isProjectExist)) {
-        throw new HttpException(
-          messages.project_not_found,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-      if (models.length > 0) {
-        await map(models, async (model) => {
-          const inventory_image = await this.cloudinary.uploadFile(
-            model,
-            folder_name,
-          );
-          const payload = {
-            model_url: inventory_image?.url,
-            image_id: inventory_image?.public_id,
-            type: inventory_image?.format,
-            project_id: project_id,
-          } as any;
-          await this.prisma.projectModel.create({
-            data: payload,
-          });
-        });
-        await this.prisma.project.update({
-          where: {
-            id: project_id,
-          },
-          data: {
-            status: ProjectStatus.CUSTOMER_INQUIRY,
-          },
-        });
-        return {
-          message: messages.project_equipment,
-          project: isProjectExist || {},
-        };
-      }
-      return {
-        message: messages.project_equipment,
-        project: isProjectExist || {},
-      };
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async updateProjectEquipment(
-    input: any,
-    project_id: string,
-  ): Promise<ProjectResponse> {
-    try {
-      const isProjectExist = await this.findProject(project_id);
-      if (isEmpty(isProjectExist)) {
-        throw new HttpException(
-          messages.project_not_found,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-      const payload = map(input.equipments, (data) => {
-        return {
-          quantity: Number(data.quantity),
-          component: data.component_type,
-          connection: data.connection,
-          set_name: data.set_name,
-          voltage: data?.voltage || 0,
-          ampere: data?.ampere || 0,
-          watt: data?.watt || 0,
-          inventory_id: data.inventory,
-          project_id: project_id,
-        };
-      });
-
-      await this.prisma.equipment.createMany({
-        data: payload,
-      });
-      await this.prisma.project.update({
-        where: {
-          id: project_id,
-        },
-        data: {
-          status: ProjectStatus.DESIGN_IN_PROGRESS,
-        },
-      });
-      return {
-        message: messages.project_equipment,
-        project: {},
-      };
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async requestFillProjectLoad(project_id: string): Promise<ProjectResponse> {
-    try {
-      const isProjectExist: any = await this.findProject(project_id);
-      await this.mailService.sendProjectInfoToCustomer(
-        isProjectExist.customer,
-        isProjectExist,
-      );
-      return {
-        message: messages.project_link_sent,
-        project: {},
-      };
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async changeProjectStatus(
-    input: ChangeProjectStatus,
-    project_id: string,
-  ): Promise<ProjectResponse> {
-    try {
-      const { status } = input;
-      const isProjectExist = await this.findProject(project_id);
-      if (isEmpty(isProjectExist)) {
-        throw new HttpException(
-          messages.project_not_found,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-      await this.prisma.project.update({
-        where: {
-          id: project_id,
-        },
-        data: {
-          status: status?.toUpperCase() as ProjectStatus,
-        },
-      });
-      return {
-        message: messages.project_status_changed,
-        project: {},
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);

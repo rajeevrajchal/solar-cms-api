@@ -78,7 +78,7 @@ export class InventoryService {
 
   async create(
     payload: InventoryInput,
-    product_image: any,
+    product_image: Express.Multer.File,
   ): Promise<InventoryResponse> {
     try {
       const inventory = await this.prisma.inventory.create({
@@ -214,7 +214,7 @@ export class InventoryService {
   async update(
     payload: InventoryInput,
     inventory_id: string,
-    product_image: any,
+    product_image: Express.Multer.File,
   ): Promise<InventoryResponse> {
     try {
       let inventory_image = null;
