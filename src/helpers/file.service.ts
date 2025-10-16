@@ -48,14 +48,21 @@ export class FileService {
       'Content-Type': 'application/octet-stream',
       'Access-Control-Expose-Headers': 'Content-Disposition',
     });
+
     const filePath = join(directoryPath, filename);
     await this.createFileFromData(filePath, data);
-    const file = await createReadStream(filePath);
-    file.pipe(res);
-    await new Promise((resolve) => {
-      file.on('end', resolve);
+
+    const file = createReadStream(filePath);
+
+    // Delete file after stream is closed (either successfully or with error)
+    file.on('close', async () => {
+      try {
+        await this.deleteFile(filePath);
+      } catch (err) {
+        console.error('Failed to delete file:', err);
+      }
     });
-    await this.deleteFile(filePath);
+
     return new StreamableFile(file);
   }
 
@@ -69,12 +76,18 @@ export class FileService {
       'Content-Type': 'application/octet-stream',
       'Access-Control-Expose-Headers': 'Content-Disposition',
     });
+
     const fileStream = createReadStream(filePath);
-    fileStream.pipe(res);
-    await new Promise((resolve) => {
-      fileStream.on('end', resolve);
+
+    // Delete file after stream is closed
+    fileStream.on('close', async () => {
+      try {
+        await this.deleteFile(filePath);
+      } catch (err) {
+        console.error('Failed to delete file:', err);
+      }
     });
-    await this.deleteFile(filePath);
+
     return new StreamableFile(fileStream);
   }
 }
