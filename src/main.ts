@@ -12,17 +12,23 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix('api');
+
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
+
   app.enableCors({
     origin: true,
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   });
+
   const port = process.env.PORT || 3000;
-  console.log('App Running in port', 3000);
-  await app.listen(port);
+
+  console.log(`App running on port ${port}`);
+
+  await app.listen(port, '0.0.0.0');
 }
+
 bootstrap();
