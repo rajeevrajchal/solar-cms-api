@@ -26,12 +26,9 @@ import { VendorModule } from './module/vendor/vendor.module';
     ConfigModule.forRoot({
       isGlobal: true, // no need to import into other modules
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60000, limit: 100 }],
+    }),
     MulterModule.register(),
     UserModule,
     AuthModule,

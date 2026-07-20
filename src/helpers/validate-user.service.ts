@@ -1,6 +1,6 @@
 import { Global, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserCheckerService } from './user-checker.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import messages from 'src/constants/message.constant';
 
 @Global()

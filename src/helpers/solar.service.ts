@@ -54,7 +54,7 @@ export class SolarService {
         winter: avgSunHoursWinter,
         monsoon: avgSunHoursMonsoon,
       };
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to fetch sunlight hours');
     }
   }

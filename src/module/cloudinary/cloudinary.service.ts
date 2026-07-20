@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UploadApiErrorResponse, UploadApiResponse, v2 } from 'cloudinary';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import toStream = require('buffer-to-stream');
 
 @Injectable()

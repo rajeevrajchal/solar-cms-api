@@ -2,7 +2,7 @@ FROM node:20
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*. ggjson ./
 RUN npm cache clean --force
 RUN npm install
 
@@ -15,4 +15,4 @@ RUN npm run build
 ENV NODE_ENV=production
 
 # Runtime phase — DB migration + app start, happens on container boot
-CMD npx prisma migrate deploy && node dist/main
+CMD npx prisma migrate deploy && node dist/

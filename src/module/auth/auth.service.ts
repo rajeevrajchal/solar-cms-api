@@ -105,7 +105,7 @@ export class AuthService {
       return {
         messages: messages.password_changed,
       };
-    } catch (error) {
+    } catch (_error) {
       throw new HttpException(
         messages.login_error,
         HttpStatus.INTERNAL_SERVER_ERROR,

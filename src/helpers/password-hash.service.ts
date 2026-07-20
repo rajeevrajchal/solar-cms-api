@@ -1,5 +1,5 @@
 import { Global, Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Global()
 @Injectable()
