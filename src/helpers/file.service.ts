@@ -52,8 +52,8 @@ export class FileService {
     await this.createFileFromData(filePath, data);
     const file = await createReadStream(filePath);
     file.pipe(res);
-    await new Promise((resolve) => {
-      file.on('end', resolve);
+    await new Promise<void>((resolve) => {
+      file.on('end', () => resolve());
     });
     await this.deleteFile(filePath);
     return new StreamableFile(file);
@@ -71,8 +71,8 @@ export class FileService {
     });
     const fileStream = createReadStream(filePath);
     fileStream.pipe(res);
-    await new Promise((resolve) => {
-      fileStream.on('end', resolve);
+    await new Promise<void>((resolve) => {
+      fileStream.on('end', () => resolve());
     });
     await this.deleteFile(filePath);
     return new StreamableFile(fileStream);

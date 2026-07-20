@@ -107,11 +107,12 @@ export class InventoryService {
           id: inventory.id,
         },
         data: {
-          product_image:
-            {
-              url: inventory_image?.url,
-              id: inventory_image?.public_id,
-            } || null,
+          product_image: inventory_image
+            ? {
+                url: inventory_image.url,
+                id: inventory_image.public_id,
+              }
+            : null,
         } as any,
       });
       return {
@@ -241,11 +242,12 @@ export class InventoryService {
         },
         data: {
           ...payload,
-          product_image:
-            {
-              url: inventory_image?.url,
-              id: inventory_image?.public_id,
-            } || null,
+          product_image: inventory_image
+            ? {
+                url: inventory_image.url,
+                id: inventory_image.public_id,
+              }
+            : null,
           watt: +payload.watt,
           voltage: +payload.voltage,
           ampere: +payload.ampere,
