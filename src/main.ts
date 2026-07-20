@@ -22,6 +22,7 @@ async function bootstrap() {
     exposedHeaders: ['Content-Disposition'],
   });
   const port = process.env.PORT || 3000;
+  console.log('App Running in port', 3000);
   await app.listen(port);
 }
 bootstrap();
